@@ -40,11 +40,20 @@ import java.util.Objects;
  * @date 2020/7/5 12:19 PM
  */
 public class DumpProcessor implements NacosTaskProcessor {
-    
+
+    /**
+     * 配置信息持久化服务，用于检索配置信息
+     */
     final ConfigInfoPersistService configInfoPersistService;
-    
+
+    /**
+     * Beta版配置信息持久化服务，用于检索Beta配置信息
+     */
     final ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
+
+    /**
+     * 配置标签持久化服务，用于检索配置标签
+     */
     final ConfigInfoTagPersistService configInfoTagPersistService;
     
     public DumpProcessor(ConfigInfoPersistService configInfoPersistService,
@@ -78,6 +87,9 @@ public class DumpProcessor implements NacosTaskProcessor {
         
         if (isBeta) {
             // if publish beta, then dump config, update beta cache
+            /**
+             * 如果是beta版，则从beta版的表中查询数据
+             */
             ConfigInfoBetaWrapper cf = configInfoBetaPersistService.findConfigInfo4Beta(dataId, group, tenant);
             build.remove(Objects.isNull(cf));
             build.betaIps(Objects.isNull(cf) ? null : cf.getBetaIps());
@@ -89,6 +101,9 @@ public class DumpProcessor implements NacosTaskProcessor {
         }
         
         if (StringUtils.isNotBlank(tag)) {
+            /**
+             * 转储的数据中包含标签，则从标签表中查询数据
+             */
             ConfigInfoTagWrapper cf = configInfoTagPersistService.findConfigInfo4Tag(dataId, group, tenant, tag);
             build.remove(Objects.isNull(cf));
             build.content(Objects.isNull(cf) ? null : cf.getContent());
@@ -97,7 +112,10 @@ public class DumpProcessor implements NacosTaskProcessor {
             build.lastModifiedTs(Objects.isNull(cf) ? lastModifiedOut : cf.getLastModified());
             return DumpConfigHandler.configDump(build.build());
         }
-        
+
+        /**
+         * 转储的数据从配置表中查询
+         */
         ConfigInfoWrapper cf = configInfoPersistService.findConfigInfo(dataId, group, tenant);
         build.remove(Objects.isNull(cf));
         build.content(Objects.isNull(cf) ? null : cf.getContent());

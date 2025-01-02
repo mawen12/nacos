@@ -173,14 +173,12 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigInfoStateWrapper findConfigInfoState(final String dataId, final String group, final String tenant) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.CONFIG_INFO);
+        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(), TableConstant.CONFIG_INFO);
         
         final String sql = configInfoMapper.select(
                 Arrays.asList("id", "data_id", "group_id", "tenant_id", "gmt_modified"),
                 Arrays.asList("data_id", "group_id", "tenant_id"));
-        return databaseOperate.queryOne(sql, new Object[] {dataId, group, tenantTmp},
-                CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER);
+        return databaseOperate.queryOne(sql, new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER);
         
     }
     
@@ -203,26 +201,48 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             final Map<String, Object> configAdvanceInfo, BiConsumer<Boolean, Throwable> consumer) {
         
         try {
-            final String tenantTmp =
-                    StringUtils.isBlank(configInfo.getTenant()) ? StringUtils.EMPTY : configInfo.getTenant();
+            final String tenantTmp = StringUtils.isBlank(configInfo.getTenant()) ? StringUtils.EMPTY : configInfo.getTenant();
             configInfo.setTenant(tenantTmp);
-            
+
+            /**
+             * 使用ID生成器生成配置记录ID
+             */
             long configId = idGeneratorManager.nextId(RESOURCE_CONFIG_INFO_ID);
+            /**
+             * 使用ID生成器生成配置记录历史ID
+             */
             long hisId = idGeneratorManager.nextId(RESOURCE_CONFIG_HISTORY_ID);
-            
+            /**
+             * 生成config_info表的新增SQL并写入 {@link EmbeddedStorageContextHolder#SQL_CONTEXT}
+             */
             addConfigInfoAtomic(configId, srcIp, srcUser, configInfo, configAdvanceInfo);
             String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
-            
-            addConfigTagsRelation(configId, configTags, configInfo.getDataId(), configInfo.getGroup(),
-                    configInfo.getTenant());
+            /**
+             * 如果存在标签，则生成config_tags_relation表的新增SQL并写入 {@link EmbeddedStorageContextHolder#SQL_CONTEXT}
+             */
+            addConfigTagsRelation(configId, configTags, configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant());
 
             Timestamp now = new Timestamp(System.currentTimeMillis());
+            /**
+             * 生成his_config_info表的新增SQL并写入 {@link EmbeddedStorageContextHolder#SQL_CONTEXT}
+             */
             historyConfigInfoPersistService.insertConfigHistoryAtomic(hisId, configInfo, srcIp, srcUser, now, "I");
+            /**
+             * 如果是集群模式，则将配置生成事件并写入{@link EmbeddedStorageContextHolder#EXTEND_INFO_CONTEXT}
+             */
             EmbeddedStorageContextUtils.onModifyConfigInfo(configInfo, srcIp, now);
+            /**
+             * 执行{@link EmbeddedStorageContextHolder#SQL_CONTEXT}的所有SQL，然后清空{@link EmbeddedStorageContextHolder#SQL_CONTEXT,EmbeddedStorageContextHolder#EXTEND_INFO_CONTEXT}。
+             */
             databaseOperate.blockUpdate(consumer);
+            /**
+             * 从数据库中检索插入的数据并返回
+             */
             return getConfigInfoOperateResult(configInfo.getDataId(), configInfo.getGroup(), tenantTmp);
-            
         } finally {
+            /**
+             * 清空{@link EmbeddedStorageContextHolder#SQL_CONTEXT,EmbeddedStorageContextHolder#EXTEND_INFO_CONTEXT}。
+             */
             EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
@@ -230,8 +250,11 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigOperateResult insertOrUpdate(String srcIp, String srcUser, ConfigInfo configInfo,
             Map<String, Object> configAdvanceInfo) {
-        if (Objects.isNull(
-                findConfigInfoState(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant()))) {
+        /**
+         * 检索数据库中是否存在匹配dataId+group+tenant的配置记录
+         * 如果不存在，则新增，否则更新
+         */
+        if (Objects.isNull(findConfigInfoState(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant()))) {
             return addConfigInfo(srcIp, srcUser, configInfo, configAdvanceInfo);
         } else {
             return updateConfigInfo(configInfo, srcIp, srcUser, configAdvanceInfo);
@@ -241,10 +264,15 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigOperateResult insertOrUpdateCas(String srcIp, String srcUser, ConfigInfo configInfo,
             Map<String, Object> configAdvanceInfo) {
-        if (Objects.isNull(
-                findConfigInfoState(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant()))) {
+        /**
+         * 库中不存在特定dataId, group, tenant的配置记录时，新增记录；反之则执行比较更新
+         */
+        if (Objects.isNull(findConfigInfoState(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant()))) {
             return addConfigInfo(srcIp, srcUser, configInfo, configAdvanceInfo);
         } else {
+            /**
+             * 执行Compare-And-Set更新
+             */
             return updateConfigInfoCas(configInfo, srcIp, srcUser, configAdvanceInfo);
         }
     }
@@ -260,10 +288,8 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String type = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("type");
         final String schema = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("schema");
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.PERSIST_ENCODE);
-        final String encryptedDataKey =
-                configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
-        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.CONFIG_INFO);
+        final String encryptedDataKey = configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
+        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(), TableConstant.CONFIG_INFO);
 
         final String sql = configInfoMapper.insert(
                 Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
@@ -405,8 +431,7 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 
                 removeConfigInfoAtomic(dataId, group, tenantTmp, srcIp, srcUser);
                 removeTagByIdAtomic(configInfo.getId());
-                historyConfigInfoPersistService.insertConfigHistoryAtomic(configInfo.getId(), configInfo, srcIp,
-                        srcUser, time, "D");
+                historyConfigInfoPersistService.insertConfigHistoryAtomic(configInfo.getId(), configInfo, srcIp, srcUser, time, "D");
                 
                 EmbeddedStorageContextUtils.onDeleteConfigInfo(tenantTmp, group, dataId, srcIp, time);
                 
@@ -534,21 +559,34 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public ConfigOperateResult updateConfigInfoCas(final ConfigInfo configInfo, final String srcIp,
             final String srcUser, final Map<String, Object> configAdvanceInfo) {
         try {
-            ConfigInfo oldConfigInfo = findConfigInfo(configInfo.getDataId(), configInfo.getGroup(),
-                    configInfo.getTenant());
-            
-            final String tenantTmp =
-                    StringUtils.isBlank(configInfo.getTenant()) ? StringUtils.EMPTY : configInfo.getTenant();
-            
+            /**
+             * 查询现有的配置记录
+             */
+            ConfigInfo oldConfigInfo = findConfigInfo(configInfo.getDataId(), configInfo.getGroup(),configInfo.getTenant());
+
+            /**
+             * 处理命名空间，如果为空，则取空字符串
+             */
+            final String tenantTmp =StringUtils.isBlank(configInfo.getTenant()) ? StringUtils.EMPTY : configInfo.getTenant();
+
+            /**
+             * 更新命名空间
+             */
             oldConfigInfo.setTenant(tenantTmp);
-            
+
+            /**
+             * 如果用户未提供appName，则使用数据库中现有的
+             */
             String appNameTmp = oldConfigInfo.getAppName();
             // If the appName passed by the user is not empty, the appName of the user is persisted;
             // otherwise, the appName of db is used. Empty string is required to clear appName
             if (configInfo.getAppName() == null) {
                 configInfo.setAppName(appNameTmp);
             }
-            
+
+            /**
+             * 以原子方式，执行配置的Compare-And-Set更新
+             */
             updateConfigInfoAtomicCas(configInfo, srcIp, srcUser, configAdvanceInfo);
             
             String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
@@ -576,6 +614,9 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     
     private ConfigOperateResult updateConfigInfoAtomicCas(final ConfigInfo configInfo, final String srcIp,
             final String srcUser, Map<String, Object> configAdvanceInfo) {
+        /**
+         * 提取字段值
+         */
         final String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         final String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
@@ -584,10 +625,14 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String effect = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("effect");
         final String type = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("type");
         final String schema = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("schema");
-        final String encryptedDataKey =
-                configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
-        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.CONFIG_INFO);
+        final String encryptedDataKey = configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
+        /**
+         * 获取用于构造配置SQL的Mapper
+         */
+        ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),TableConstant.CONFIG_INFO);
+        /**
+         * 构造用于保存参数，生成SQL的上下文
+         */
         MapperContext context = new MapperContext();
         context.putUpdateParameter(FieldConstant.CONTENT, configInfo.getContent());
         context.putUpdateParameter(FieldConstant.MD5, md5Tmp);
@@ -604,6 +649,9 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         context.putWhereParameter(FieldConstant.GROUP_ID, configInfo.getGroup());
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
         context.putWhereParameter(FieldConstant.MD5, configInfo.getMd5());
+        /**
+         * 生成
+         */
         MapperResult mapperResult = configInfoMapper.updateConfigInfoAtomicCas(context);
         
         EmbeddedStorageContextHolder.addSqlContext(Boolean.TRUE, mapperResult.getSql(), mapperResult.getParamList().toArray());
@@ -803,7 +851,10 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         MapperResult sqlCountRows;
         MapperResult sqlFetchRows;
-        
+
+        /**
+         * 将接口传递的查询参数，封装到MapperContext，便于在后面构造SQL
+         */
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
         context.putWhereParameter(FieldConstant.TENANT_ID, generateLikeArgument(tenantTmp));
         
@@ -821,6 +872,9 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         }
         
         if (StringUtils.isNotBlank(configTags)) {
+            /**
+             * 当传递了
+             */
             String[] tagArr = configTags.split(",");
             context.putWhereParameter(FieldConstant.TAG_ARR, tagArr);
             ConfigTagsRelationMapper configTagsRelationMapper = mapperManager.findMapper(
@@ -828,9 +882,18 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             sqlCountRows = configTagsRelationMapper.findConfigInfoLike4PageCountRows(context);
             sqlFetchRows = configTagsRelationMapper.findConfigInfoLike4PageFetchRows(context);
         } else {
+            /**
+             * 根据数据库类型和表，获取查询接口
+             */
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
+            /**
+             * 使用查询参数构造查询数量的SQL
+             */
             sqlCountRows = configInfoMapper.findConfigInfoLike4PageCountRows(context);
+            /**
+             * 使用查询参数构造查询记录的SQL
+             */
             sqlFetchRows = configInfoMapper.findConfigInfoLike4PageFetchRows(context);
         }
         PaginationHelper<ConfigInfo> helper = createPaginationHelper();

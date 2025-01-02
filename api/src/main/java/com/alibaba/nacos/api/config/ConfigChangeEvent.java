@@ -20,8 +20,10 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * ConfigChangeEvent.
+ * 配置变更事件。当使用AbstractConfigChangeListener时，会在配置发生变更时，服务端通知到客户端时，触发该事件
  *
+ * @see {@link com.alibaba.nacos.client.config.impl.CacheData}
+ * @see {@link com.alibaba.nacos.client.config.listener.impl.AbstractConfigChangeListener}
  * @author rushsky518
  */
 public class ConfigChangeEvent {

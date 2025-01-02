@@ -16,12 +16,17 @@
 
 package com.alibaba.nacos.plugin.datasource.constants;
 
+import java.lang.reflect.Method;
+
 /**
  * Datasource plugin common constant.
  *
  * @author xiweng.yy
  */
 public class CommonConstant {
-    
+
+    /**
+     * 是否开启SQL打印，打印由{@link com.alibaba.nacos.plugin.datasource.proxy.MapperProxy#invoke(Object, Method, Object[])}负责。
+     */
     public static final String NACOS_PLUGIN_DATASOURCE_LOG = "nacos.plugin.datasource.log.enabled";
 }

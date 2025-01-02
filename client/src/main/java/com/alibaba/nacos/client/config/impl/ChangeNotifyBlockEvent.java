@@ -19,7 +19,9 @@ package com.alibaba.nacos.client.config.impl;
 import com.alibaba.nacos.common.notify.SlowEvent;
 
 /**
- * change notify block event.
+ * 变更通知阻塞事件，目前无监听器
+ *
+ * @see {@link CacheData.LongNotifyHandler#run()}
  *
  * @author shiyiyue
  */
@@ -35,19 +37,40 @@ public class ChangeNotifyBlockEvent extends SlowEvent {
         this.currentTime = currentTime;
         this.blockStack = blockStack;
     }
-    
+
+    /**
+     * 监听类名
+     */
     private String listener;
-    
+
+    /**
+     * DataId
+     */
     private String dataId;
-    
+
+    /**
+     * 分组名称
+     */
     private String group;
-    
+
+    /**
+     * 命名空间
+     */
     private String tenant;
-    
+
+    /**
+     * 负责创建该事件的任务创建的时间
+     */
     private long startTime;
-    
+
+    /**
+     * 任务创建事件的时间
+     */
     private long currentTime;
-    
+
+    /**
+     * 当前线程调用栈，至多5层
+     */
     private String blockStack;
     
     public String getDataId() {

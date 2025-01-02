@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
  * will take 150 seconds for the DataCenterId to be repeated. This is still based on the situation that the new master
  * needs to be selected after each election of the Leader
  *
+ * 基于雪花算法的ID生成器
+ *
  * @author <a href="mailto:liaochunyhm@live.com">liaochuntao</a>
  */
 @SuppressWarnings("all")

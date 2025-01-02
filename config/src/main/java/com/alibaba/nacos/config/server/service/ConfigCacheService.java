@@ -43,7 +43,8 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.DUMP_LOG;
 import static com.alibaba.nacos.config.server.utils.LogUtil.FATAL_LOG;
 
 /**
- * Config service.
+ * 配置缓存服务，在配置新增、修改、删除时，触发{@link com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent}，
+ * 然后再由{@link com.alibaba.nacos.config.server.service.dump.DumpService}来更新缓存信息
  *
  * @author Nacos
  */
@@ -58,7 +59,7 @@ public class ConfigCacheService {
     private static final String DISK_QUOTA_EN = "Disk quota exceeded";
     
     /**
-     * groupKey -> cacheItem.
+     * groupKey(dataId, group, tenant) -> cacheItem.
      */
     private static final ConcurrentHashMap<String, CacheItem> CACHE = new ConcurrentHashMap<>();
     
@@ -328,6 +329,9 @@ public class ConfigCacheService {
      */
     public static boolean remove(String dataId, String group, String tenant) {
         final String groupKey = GroupKey2.getKey(dataId, group, tenant);
+        /**
+         * 获取写锁
+         */
         final int lockResult = tryWriteLock(groupKey);
         
         // If data is non-existent.
@@ -337,6 +341,9 @@ public class ConfigCacheService {
         }
         
         // try to lock failed
+        /**
+         * 获取锁失败
+         */
         if (lockResult < 0) {
             DUMP_LOG.warn("[remove-error] write lock failed. {}", groupKey);
             return false;
@@ -344,6 +351,7 @@ public class ConfigCacheService {
         
         try {
             DUMP_LOG.info("[dump] remove  local disk cache,groupKey={} ", groupKey);
+
             ConfigDiskServiceFactory.getInstance().removeConfigInfo(dataId, group, tenant);
             
             CACHE.remove(groupKey);

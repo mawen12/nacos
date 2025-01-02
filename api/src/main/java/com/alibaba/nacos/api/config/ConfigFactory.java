@@ -25,6 +25,9 @@ import java.util.Properties;
 /**
  * Config Factory.
  *
+ * 简单工厂设计模式
+ * 配置中心工厂。负责创建配置中心。
+ *
  * @author Nacos
  */
 public class ConfigFactory {
@@ -32,15 +35,29 @@ public class ConfigFactory {
     /**
      * Create Config.
      *
+     * 初始化并返回配置中心
+     *
      * @param properties init param
      * @return ConfigService
      * @throws NacosException Exception
      */
     public static ConfigService createConfigService(Properties properties) throws NacosException {
         try {
+            /**
+             * 加载{@link com.alibaba.nacos.client.config.NacosConfigService}类
+             */
             Class<?> driverImplClass = Class.forName("com.alibaba.nacos.client.config.NacosConfigService");
+            /**
+             * 获取支持{@link Properties}的构造器
+             */
             Constructor constructor = driverImplClass.getConstructor(Properties.class);
+            /**
+             * 使用反射创建配置中心
+             */
             ConfigService vendorImpl = (ConfigService) constructor.newInstance(properties);
+            /**
+             * 返回配置中心
+             */
             return vendorImpl;
         } catch (Throwable e) {
             throw new NacosException(NacosException.CLIENT_INVALID_PARAM, e);
@@ -49,6 +66,8 @@ public class ConfigFactory {
     
     /**
      * Create Config.
+     *
+     * 初始化配置中心
      *
      * @param serverAddr serverList
      * @return Config

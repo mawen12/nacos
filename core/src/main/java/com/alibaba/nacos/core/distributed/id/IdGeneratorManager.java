@@ -30,11 +30,15 @@ import java.util.function.Function;
 /**
  * Id generator manager.
  *
+ * ID 生成管理器
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 @Component
 public class IdGeneratorManager {
-    
+    /**
+     * <资源字符串, ID生成器>
+     */
     private final Map<String, IdGenerator> generatorMap = new ConcurrentHashMap<>();
     
     private final Function<String, IdGenerator> supplier;

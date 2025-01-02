@@ -260,6 +260,8 @@ public class EnvUtil {
     
     /**
      * Standalone mode or not.
+     *
+     * 根据配置nacos.standalone判断是否为单机模式
      */
     public static boolean getStandaloneMode() {
         if (Objects.isNull(isStandalone)) {

@@ -48,39 +48,48 @@ import java.util.Map;
 
 /**
  * request handler to publish config.
+ * <p>
+ * 处理Nacos Client发布配置的入口，该方法是基于RPC的。
  *
  * @author liuzunfei
  * @version $Id: ConfigPublishRequestHandler.java, v 0.1 2020年07月16日 4:41 PM liuzunfei Exp $
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfig(String, String, String)}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfig(String, String, String, String)}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfigCas(String, String, String, String)}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfigCas(String, String, String, String, String)}
  */
 @Component
 public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishRequest, ConfigPublishResponse> {
-    
+
     private final ConfigInfoPersistService configInfoPersistService;
-    
+
     private final ConfigInfoTagPersistService configInfoTagPersistService;
-    
+
     private final ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
+
     public ConfigPublishRequestHandler(ConfigInfoPersistService configInfoPersistService,
-            ConfigInfoTagPersistService configInfoTagPersistService,
-            ConfigInfoBetaPersistService configInfoBetaPersistService) {
+                                       ConfigInfoTagPersistService configInfoTagPersistService,
+                                       ConfigInfoBetaPersistService configInfoBetaPersistService) {
         this.configInfoPersistService = configInfoPersistService;
         this.configInfoTagPersistService = configInfoTagPersistService;
         this.configInfoBetaPersistService = configInfoBetaPersistService;
     }
-    
+
     @Override
     @TpsControl(pointName = "ConfigPublish")
     @Secured(action = ActionTypes.WRITE, signType = SignType.CONFIG)
     @ExtractorManager.Extractor(rpcExtractor = ConfigRequestParamExtractor.class)
     public ConfigPublishResponse handle(ConfigPublishRequest request, RequestMeta meta) throws NacosException {
-        
+
         try {
+            /**
+             * 从请求中解析参数
+             */
             String dataId = request.getDataId();
             String group = request.getGroup();
             String content = request.getContent();
             final String tenant = request.getTenant();
-            
+
             final String srcIp = meta.getClientIp();
             final String requestIpApp = request.getAdditionParam("requestIpApp");
             final String tag = request.getAdditionParam("tag");
@@ -88,8 +97,10 @@ public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishReq
             final String type = request.getAdditionParam("type");
             final String srcUser = request.getAdditionParam("src_user");
             final String encryptedDataKey = request.getAdditionParam("encryptedDataKey");
-            
-            // check tenant
+
+            /**
+             * 校验参数
+             */
             ParamUtils.checkParam(dataId, group, "datumId", content);
             ParamUtils.checkParam(tag);
             Map<String, Object> configAdvanceInfo = new HashMap<>(10);
@@ -100,25 +111,31 @@ public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishReq
             MapUtil.putIfValNoNull(configAdvanceInfo, "type", type);
             MapUtil.putIfValNoNull(configAdvanceInfo, "schema", request.getAdditionParam("schema"));
             ParamUtils.checkParam(configAdvanceInfo);
-            
+
             if (AggrWhitelist.isAggrDataId(dataId)) {
                 Loggers.REMOTE_DIGEST.warn("[aggr-conflict] {} attempt to publish single data, {}, {}", srcIp, dataId,
                         group);
                 throw new NacosException(NacosException.NO_RIGHT, "dataId:" + dataId + " is aggr");
             }
-            
+
+            /**
+             * 使用传递的参数构造配置
+             */
             ConfigInfo configInfo = new ConfigInfo(dataId, group, tenant, appName, content);
             configInfo.setMd5(request.getCasMd5());
             configInfo.setType(type);
             configInfo.setEncryptedDataKey(encryptedDataKey);
             String betaIps = request.getAdditionParam("betaIps");
+
             ConfigOperateResult configOperateResult = null;
             String persistEvent = ConfigTraceService.PERSISTENCE_EVENT;
             if (StringUtils.isBlank(betaIps)) {
                 if (StringUtils.isBlank(tag)) {
                     if (StringUtils.isNotBlank(request.getCasMd5())) {
-                        configOperateResult = configInfoPersistService.insertOrUpdateCas(srcIp, srcUser, configInfo,
-                                configAdvanceInfo);
+                        /**
+                         *
+                         */
+                        configOperateResult = configInfoPersistService.insertOrUpdateCas(srcIp, srcUser, configInfo, configAdvanceInfo);
                         if (!configOperateResult.isSuccess()) {
                             return ConfigPublishResponse.buildFailResponse(ResponseCode.FAIL.getCode(),
                                     "Cas publish fail,server md5 may have changed.");
@@ -142,9 +159,7 @@ public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishReq
                                 srcUser);
                     }
                     persistEvent = ConfigTraceService.PERSISTENCE_EVENT_TAG + "-" + tag;
-                    ConfigChangePublisher.notifyConfigChange(
-                            new ConfigDataChangeEvent(false, dataId, group, tenant, tag,
-                                    configOperateResult.getLastModified()));
+                    ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, dataId, group, tenant, tag, configOperateResult.getLastModified()));
                 }
             } else {
                 // beta publish
@@ -160,9 +175,8 @@ public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishReq
                             srcUser);
                 }
                 persistEvent = ConfigTraceService.PERSISTENCE_EVENT_BETA;
-                
-                ConfigChangePublisher.notifyConfigChange(
-                        new ConfigDataChangeEvent(true, dataId, group, tenant, configOperateResult.getLastModified()));
+
+                ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(true, dataId, group, tenant, configOperateResult.getLastModified()));
             }
             ConfigTraceService.logPersistenceEvent(dataId, group, tenant, requestIpApp,
                     configOperateResult.getLastModified(), srcIp, persistEvent, ConfigTraceService.PERSISTENCE_TYPE_PUB,
@@ -175,5 +189,5 @@ public class ConfigPublishRequestHandler extends RequestHandler<ConfigPublishReq
                     e.getMessage());
         }
     }
-    
+
 }

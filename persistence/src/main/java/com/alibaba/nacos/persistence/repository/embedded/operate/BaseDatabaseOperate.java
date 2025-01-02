@@ -18,6 +18,7 @@ package com.alibaba.nacos.persistence.repository.embedded.operate;
 
 import com.alibaba.nacos.common.utils.ExceptionUtil;
 import com.alibaba.nacos.common.utils.LoggerUtils;
+import com.alibaba.nacos.persistence.repository.embedded.EmbeddedStorageContextHolder;
 import com.alibaba.nacos.persistence.repository.embedded.sql.ModifyRequest;
 import com.alibaba.nacos.persistence.utils.DerbyUtils;
 import org.slf4j.Logger;
@@ -40,6 +41,9 @@ import java.util.stream.IntStream;
 /**
  * The Derby database basic operation.
  *
+ * 支持基本的数据查询操作接口
+ *
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
@@ -48,7 +52,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     Logger LOGGER = LoggerFactory.getLogger(BaseDatabaseOperate.class);
     
     /**
-     * query one result by sql then convert result to target type.
+     * 使用{@link JdbcTemplate}执行SQL，获取一条记录并转换为指定类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -62,9 +66,15 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         } catch (CannotGetJdbcConnectionException e) {
+            /**
+             * 无法获取连接时抛出异常
+             */
             LOGGER.error("[db-error] can't get connection : {}", ExceptionUtil.getAllExceptionMsg(e));
             throw e;
         } catch (DataAccessException e) {
+            /**
+             * 数据访问异常
+             */
             LOGGER.error("[db-error] DataAccessException : {}", ExceptionUtil.getAllExceptionMsg(e));
             throw e;
         }
@@ -72,6 +82,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     
     /**
      * query one result by sql and args then convert result to target type.
+     * 使用{@link JdbcTemplate}执行SQL，获取一条记录并转换为指定类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -96,7 +107,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     }
     
     /**
-     * query one result by sql and args then convert result to target type through {@link RowMapper}.
+     * 使用{@link JdbcTemplate}执行SQL，获取一条记录并使用{@link RowMapper}转换为指定类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -121,7 +132,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     }
     
     /**
-     * query many result by sql and args then convert result to target type through {@link RowMapper}.
+     * 使用{@link JdbcTemplate}执行SQL，获取多条记录并使用{@link RowMapper}转换为指定类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -144,7 +155,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     }
     
     /**
-     * query many result by sql and args then convert result to target type.
+     * 使用{@link JdbcTemplate}执行SQL，获取多条记录并转换为指定类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -169,7 +180,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     }
     
     /**
-     * query many result by sql and args then convert result to List&lt;Map&lt;String, Object&gt;&gt;.
+     * 使用{@link JdbcTemplate}执行SQL，获取多条记录并转换为Map类型
      *
      * @param jdbcTemplate {@link JdbcTemplate}
      * @param sql          sql
@@ -190,7 +201,7 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     }
     
     /**
-     * execute update operation.
+     * 将所有的SQL到放到同一个事务中去操作
      *
      * @param transactionTemplate {@link TransactionTemplate}
      * @param jdbcTemplate        {@link JdbcTemplate}
@@ -205,6 +216,8 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
     /**
      * execute update operation, to fix #3617.
      *
+     * 在一个事务内，将{@link EmbeddedStorageContextHolder#SQL_CONTEXT}中的所有SQL全部执行。
+     *
      * @param transactionTemplate {@link TransactionTemplate}
      * @param jdbcTemplate        {@link JdbcTemplate}
      * @param contexts            {@link List} ModifyRequest list
@@ -214,28 +227,44 @@ public interface BaseDatabaseOperate extends DatabaseOperate {
             List<ModifyRequest> contexts, BiConsumer<Boolean, Throwable> consumer) {
         boolean updateResult = Boolean.FALSE;
         try {
+            /**
+             * 将所有的SQL执行放入到一个事务中执行
+             */
             updateResult = transactionTemplate.execute(status -> {
                 String[] errSql = new String[] {null};
                 Object[][] args = new Object[][] {null};
                 try {
+                    // 将所有的SQL取出并依次执行
                     contexts.forEach(pair -> {
                         errSql[0] = pair.getSql();
                         args[0] = pair.getArgs();
                         boolean rollBackOnUpdateFail = pair.isRollBackOnUpdateFail();
                         LoggerUtils.printIfDebugEnabled(LOGGER, "current sql : {}", errSql[0]);
                         LoggerUtils.printIfDebugEnabled(LOGGER, "current args : {}", args[0]);
+                        /**
+                         * 执行SQL
+                         */
                         int row = jdbcTemplate.update(pair.getSql(), pair.getArgs());
+                        /**
+                         * 执行失败（有可能数据未发生变更）且设置了回滚，便抛出异常
+                         */
                         if (rollBackOnUpdateFail && row < 1) {
                             LoggerUtils.printIfDebugEnabled(LOGGER, "SQL update affected {} rows ", row);
                             throw new IllegalTransactionStateException("Illegal transaction");
                         }
                     });
+                    /**
+                     * 将结果回写
+                     */
                     if (consumer != null) {
                         consumer.accept(Boolean.TRUE, null);
                     }
                     return Boolean.TRUE;
                 } catch (BadSqlGrammarException | DataIntegrityViolationException e) {
                     LOGGER.error("[db-error] sql : {}, args : {}, error : {}", errSql[0], args[0], e.toString());
+                    /**
+                     * 将异常回写
+                     */
                     if (consumer != null) {
                         consumer.accept(Boolean.FALSE, e);
                     }

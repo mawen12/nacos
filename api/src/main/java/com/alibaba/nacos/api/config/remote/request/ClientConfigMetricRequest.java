@@ -25,7 +25,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * request of config module metrics.
+ * 客户端配置指标请求
+ *
+ * @see {@link com.alibaba.nacos.api.config.remote.response.ClientConfigMetricResponse}
+ * @see {@link com.alibaba.nacos.client.config.impl.ClientWorker.ConfigRpcTransportClient#handleClientMetricsRequest(ClientConfigMetricRequest)}
  *
  * @author liuzunfei
  * @version $Id: ClientConfigMetricRequest.java, v 0.1 2020年12月30日 9:05 PM liuzunfei Exp $

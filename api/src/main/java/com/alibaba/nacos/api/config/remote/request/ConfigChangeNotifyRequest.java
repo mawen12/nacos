@@ -20,7 +20,10 @@ import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.remote.request.ServerRequest;
 
 /**
- * ConfigChangeNotifyRequest.
+ * 配置变更通知请求
+ *
+ * @see {@link com.alibaba.nacos.api.config.remote.response.ConfigChangeNotifyResponse}
+ * @see {@link com.alibaba.nacos.client.config.impl.ClientWorker.ConfigRpcTransportClient#handleConfigChangeNotifyRequest(ConfigChangeNotifyRequest, String)}
  *
  * @author liuzunfei
  * @version $Id: ConfigChangeNotifyRequest.java, v 0.1 2020年07月14日 3:20 PM liuzunfei Exp $

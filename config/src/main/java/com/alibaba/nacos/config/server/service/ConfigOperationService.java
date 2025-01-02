@@ -111,12 +111,16 @@ public class ConfigOperationService {
                                 ErrorCode.RESOURCE_CONFLICT, "Cas publish fail, server md5 may have changed.");
                     }
                 } else {
+                    /**
+                     * 将配置信息保存到数据库中
+                     */
                     configOperateResult = configInfoPersistService.insertOrUpdate(configRequestInfo.getSrcIp(),
                             configForm.getSrcUser(), configInfo, configAdvanceInfo);
                 }
-                ConfigChangePublisher.notifyConfigChange(
-                        new ConfigDataChangeEvent(false, configForm.getDataId(), configForm.getGroup(),
-                                configForm.getNamespaceId(), configOperateResult.getLastModified()));
+                /**
+                 * 发布配置变更事件，此时配置信息已经保存到数据库中
+                 */
+                ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId(), configOperateResult.getLastModified()));
             } else {
                 if (StringUtils.isNotBlank(configRequestInfo.getCasMd5())) {
                     configOperateResult = configInfoTagPersistService.insertOrUpdateTagCas(configInfo,
@@ -134,10 +138,7 @@ public class ConfigOperationService {
                             configRequestInfo.getSrcIp(), configForm.getSrcUser());
                 }
                 persistEvent = ConfigTraceService.PERSISTENCE_EVENT_TAG + "-" + configForm.getTag();
-                ConfigChangePublisher.notifyConfigChange(
-                        new ConfigDataChangeEvent(false, configForm.getDataId(), configForm.getGroup(),
-                                configForm.getNamespaceId(), configForm.getTag(),
-                                configOperateResult.getLastModified()));
+                ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId(), configForm.getTag(), configOperateResult.getLastModified()));
             }
         } else {
             // beta publish
@@ -156,9 +157,7 @@ public class ConfigOperationService {
                         configRequestInfo.getBetaIps(), configRequestInfo.getSrcIp(), configForm.getSrcUser());
             }
             persistEvent = ConfigTraceService.PERSISTENCE_EVENT_BETA;
-            ConfigChangePublisher.notifyConfigChange(
-                    new ConfigDataChangeEvent(true, configForm.getDataId(), configForm.getGroup(),
-                            configForm.getNamespaceId(), configOperateResult.getLastModified()));
+            ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(true, configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId(), configOperateResult.getLastModified()));
         }
         ConfigTraceService.logPersistenceEvent(configForm.getDataId(), configForm.getGroup(),
                 configForm.getNamespaceId(), configRequestInfo.getRequestIpApp(), configOperateResult.getLastModified(),
@@ -181,8 +180,7 @@ public class ConfigOperationService {
         final Timestamp time = TimeUtils.getCurrentTime();
         ConfigTraceService.logPersistenceEvent(dataId, group, namespaceId, null, time.getTime(), clientIp, persistEvent,
                 ConfigTraceService.PERSISTENCE_TYPE_REMOVE, null);
-        ConfigChangePublisher.notifyConfigChange(
-                new ConfigDataChangeEvent(false, dataId, group, namespaceId, tag, time.getTime()));
+        ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, dataId, group, namespaceId, tag, time.getTime()));
         
         return true;
     }

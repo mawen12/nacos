@@ -21,6 +21,8 @@ import java.util.Map;
 /**
  * Id generator.
  *
+ * ID 生成器。
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public interface IdGenerator {

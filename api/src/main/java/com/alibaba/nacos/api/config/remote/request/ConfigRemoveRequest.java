@@ -17,7 +17,7 @@
 package com.alibaba.nacos.api.config.remote.request;
 
 /**
- * request to remove a config .
+ * 移除配置请求，如果携带标签，则表示仅移除配置中的标签；否则移除配置和标签
  *
  * @author liuzunfei
  * @version $Id: ConfigRemoveRequest.java, v 0.1 2020年07月16日 4:31 PM liuzunfei Exp $

@@ -29,6 +29,9 @@ import java.util.Properties;
 /**
  * Nacos Factory.
  *
+ * 简单工厂设计模式。
+ * Nacos工厂，负责初始化配置中心和注册中心。
+ *
  * @author Nacos
  */
 public class NacosFactory {

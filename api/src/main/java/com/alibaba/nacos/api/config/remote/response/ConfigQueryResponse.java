@@ -25,9 +25,15 @@ import com.alibaba.nacos.api.remote.response.Response;
  * @version $Id: ConfigQueryResponse.java, v 0.1 2020年07月14日 2:47 PM liuzunfei Exp $
  */
 public class ConfigQueryResponse extends Response {
-    
+
+    /**
+     * 服务端未找到特定配置
+     */
     public static final int CONFIG_NOT_FOUND = 300;
-    
+
+    /**
+     * 配置正在被编辑
+     */
     public static final int CONFIG_QUERY_CONFLICT = 400;
     
     String content;

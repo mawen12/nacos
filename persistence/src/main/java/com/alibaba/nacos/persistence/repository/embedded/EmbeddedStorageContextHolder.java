@@ -26,6 +26,8 @@ import java.util.Map;
 /**
  * Embedded storae context holder.
  *
+ * 基于ThreadLocal实现的存储上下文持有者
+ *
  * @author xiweng.yy
  */
 public class EmbeddedStorageContextHolder {

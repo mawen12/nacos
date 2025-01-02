@@ -35,17 +35,28 @@ import static com.alibaba.nacos.api.common.Constants.Exception.FIND_TABLE_ERROR_
 /**
  * DataSource Plugin Mapper Management.
  *
+ * 单例设计模式
+ *
  * @author hyx
  **/
 
 public class MapperManager {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(MapperManager.class);
-    
+
+    /**
+     * <数据源类型, <表名, Mapper>>
+     */
     public static final Map<String, Map<String, Mapper>> MAPPER_SPI_MAP = new HashMap<>();
-    
+
+    /**
+     * 单例模式
+     */
     private static final MapperManager INSTANCE = new MapperManager();
-    
+
+    /**
+     * 是否启动数据源日志
+     */
     private boolean dataSourceLogEnable;
     
     private MapperManager() {

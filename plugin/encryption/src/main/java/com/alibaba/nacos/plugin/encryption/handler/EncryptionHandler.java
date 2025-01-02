@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * EncryptionHandler.
+ * 加密解密处理器，只有对以cipher-开头的dataId才会进行加密解密
  *
  * @author lixiaoshuang
  */

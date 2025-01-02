@@ -20,21 +20,36 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Unified input parameters of the Mapper class.
+ * Mapper类的统一输入参数
  *
  * @author hyx
  **/
 
 public class MapperContext {
-    
+
+    /**
+     * 保存where条件的Map<字段名, 值>
+     */
     private final Map<String, Object> whereParamMap;
-    
+
+    /**
+     * 保存update的Map<字段名, 值>
+     */
     private final Map<String, Object> updateParamMap;
-    
+
+    /**
+     * 保存上下文参数的Map
+     */
     private final Map<String, String> contextParamMap;
-    
+
+    /**
+     * 开始行数
+     */
     private int startRow;
-    
+
+    /**
+     * 每页数量
+     */
     private int pageSize;
     
     public MapperContext() {

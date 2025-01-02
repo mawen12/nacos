@@ -21,6 +21,9 @@ import java.util.List;
 /**
  * The object returned by the execution of the Mapper method.
  *
+ * 保存Mapper方法执行的返回结果，该Mapper仅负责构造SQL，已经将对应的参数放到数组中。
+ * 底层的SQL执行由JdbcTemplate执行
+ *
  * @author hyx
  **/
 
@@ -32,9 +35,15 @@ public class MapperResult {
         this.sql = sql;
         this.paramList = paramList;
     }
-    
+
+    /**
+     * 执行的SQL
+     */
     private String sql;
-    
+
+    /**
+     * 参数对象
+     */
     private List<Object> paramList;
     
     public String getSql() {

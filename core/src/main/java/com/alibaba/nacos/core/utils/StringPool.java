@@ -22,7 +22,7 @@ import com.google.common.cache.CacheBuilder;
 import java.util.concurrent.TimeUnit;
 
 /**
- * StringPool,aim to reduce memory allocation.
+ * 字符串缓存池，用于减少内存占用
  *
  * @author liuzunfei
  * @author ZZQ

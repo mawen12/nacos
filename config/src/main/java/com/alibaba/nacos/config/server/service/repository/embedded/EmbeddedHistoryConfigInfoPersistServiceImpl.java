@@ -96,8 +96,7 @@ public class EmbeddedHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         String encryptedDataKey = StringUtils.defaultEmptyIfBlank(configInfo.getEncryptedDataKey());
         
-        HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
-                dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
+        HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
         final String sql = historyConfigInfoMapper.insert(
                 Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
                         "src_user", "gmt_modified", "op_type", "encrypted_data_key"));
@@ -137,22 +136,37 @@ public class EmbeddedHistoryConfigInfoPersistServiceImpl implements HistoryConfi
     @Override
     public Page<ConfigHistoryInfo> findConfigHistory(String dataId, String group, String tenant, int pageNo,
             int pageSize) {
+        /**
+         * 未传递租户时，制空
+         */
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-        
-        HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
-                dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
-        
+        /**
+         * 获取历史配置Mapper
+         */
+        HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
+
+        /**
+         * 构造Mapper上下文，保存分页信息、查询条件参数与值
+         */
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
+        /**
+         * 查询参数分别为：dataId, groupId, tenantId
+         */
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, group);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
-        
+
+        /**
+         * 构造查询数量的SQL
+         */
         String sqlCountRows = historyConfigInfoMapper.count(Arrays.asList("data_id", "group_id", "tenant_id"));
+        /**
+         * 构造带有SQL和参数的查询记录SQL
+         */
         MapperResult sqlFetchRows = historyConfigInfoMapper.pageFindConfigHistoryFetchRows(context);
         
         PaginationHelper<ConfigHistoryInfo> helper = createPaginationHelper();
-        return helper.fetchPage(sqlCountRows, sqlFetchRows.getSql(), sqlFetchRows.getParamList().toArray(), pageNo,
-                pageSize, HISTORY_LIST_ROW_MAPPER);
+        return helper.fetchPage(sqlCountRows, sqlFetchRows.getSql(), sqlFetchRows.getParamList().toArray(), pageNo, pageSize, HISTORY_LIST_ROW_MAPPER);
     }
     
     @Override

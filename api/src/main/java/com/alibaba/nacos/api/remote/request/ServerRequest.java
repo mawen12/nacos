@@ -17,7 +17,7 @@
 package com.alibaba.nacos.api.remote.request;
 
 /**
- * ServerPushResponse.
+ * 服务端推送请求
  *
  * @author liuzunfei
  * @version $Id: ServerPushResponse.java, v 0.1 2020年07月20日 1:21 PM liuzunfei Exp $

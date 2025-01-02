@@ -21,7 +21,7 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 
 /**
- * Config Service Interface.
+ * 配置中心接口，从Nacos Server读取配置
  *
  * @author Nacos
  */
@@ -29,6 +29,10 @@ public interface ConfigService {
     
     /**
      * Get config.
+     *
+     * 在指定时间内从Nacos Server读取匹配dataId和group配置记录
+     *
+     * @see {@link com.alibaba.nacos.config.server.remote.ConfigQueryRequestHandler}
      *
      * @param dataId    dataId
      * @param group     group
@@ -46,6 +50,8 @@ public interface ConfigService {
      * the system parameter: enableRemoteSyncConfig = "true" ( But there is network overhead); therefore we recommend
      * that you use this interface directly
      *
+     * 在指定时间内从Nacos Server读取匹配dataId和group的记录，然后注册监听器，每当配置发生变更时，便回调监听器。
+     *
      * @param dataId    dataId
      * @param group     group
      * @param timeoutMs read timeout
@@ -62,6 +68,9 @@ public interface ConfigService {
      * method in the ManagerListener, provide a thread pool of execution. If not provided, use the main thread callback, May
      * block other configurations or be blocked by other configurations.
      *
+     * 注册监听器到Nacos Server，每当匹配dataId和group配置发生变更时，便回调监听器。
+     *
+     *
      * @param dataId   dataId
      * @param group    group
      * @param listener listener
@@ -71,6 +80,8 @@ public interface ConfigService {
     
     /**
      * Publish config.
+     *
+     * 发布配置到Nacos Server，内容类型默认为TEXT
      *
      * @param dataId  dataId
      * @param group   group
@@ -84,6 +95,8 @@ public interface ConfigService {
     /**
      * Publish config.
      *
+     * 发布配置到Nacos Server
+     *
      * @param dataId  dataId
      * @param group   group
      * @param content content
@@ -95,6 +108,8 @@ public interface ConfigService {
     
     /**
      * Cas Publish config.
+     *
+     * 使用原子操作发布配置到Nacos Server，内容类型默认为TEXT
      *
      * @param dataId  dataId
      * @param group   group
@@ -108,6 +123,8 @@ public interface ConfigService {
     /**
      * Cas Publish config.
      *
+     * 使用原子操作发布配置到Nacos Server
+     *
      * @param dataId  dataId
      * @param group   group
      * @param content content
@@ -120,7 +137,7 @@ public interface ConfigService {
             throws NacosException;
     
     /**
-     * Remove config.
+     * 从Nacos Server中特定dataId, group的配置记录
      *
      * @param dataId dataId
      * @param group  group
@@ -132,6 +149,8 @@ public interface ConfigService {
     /**
      * Remove listener.
      *
+     * 从Nacos Server中移除匹配dataId、Group和指定监听器的监听器
+     *
      * @param dataId   dataId
      * @param group    group
      * @param listener listener
@@ -141,6 +160,8 @@ public interface ConfigService {
     /**
      * Get server status.
      *
+     * 获取Nacos Server状态
+     *
      * @return whether health
      */
     String getServerStatus();
@@ -149,6 +170,8 @@ public interface ConfigService {
      * add config filter.
      * It is recommended to use {@link com.alibaba.nacos.api.config.filter.AbstractConfigFilter} to expand the filter.
      *
+     * 添加配置过滤器
+     *
      * @param configFilter filter
      * @since 2.3.0
      */
@@ -156,6 +179,8 @@ public interface ConfigService {
     
     /**
      * Shutdown the resource service.
+     *
+     * 停止配置中心
      *
      * @throws NacosException exception.
      */

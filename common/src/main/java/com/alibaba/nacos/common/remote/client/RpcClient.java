@@ -77,7 +77,10 @@ public abstract class RpcClient implements Closeable {
     
     protected volatile AtomicReference<RpcClientStatus> rpcClientStatus = new AtomicReference<>(
             RpcClientStatus.WAIT_INIT);
-    
+
+    /**
+     * 处理客户端事件的调度服务
+     */
     protected ScheduledExecutorService clientEventExecutor;
     
     private final BlockingQueue<ReconnectContext> reconnectionSignal = new ArrayBlockingQueue<>(1);
@@ -212,17 +215,25 @@ public abstract class RpcClient implements Closeable {
     
     /**
      * check if current connected server is in server list, if not switch server.
+     *
+     * 当Nacos Server集群节点发生变更时，校验当前节点是否存在于节点列表中，
      */
     public void onServerListChange() {
         if (currentConnection != null && currentConnection.serverInfo != null) {
             ServerInfo serverInfo = currentConnection.serverInfo;
             boolean found = false;
+            /**
+             * 读取服务节点列表，判断当前连接的节点是否存在于节点列表中
+             */
             for (String serverAddress : serverListFactory.getServerList()) {
                 if (resolveServerInfo(serverAddress).getAddress().equalsIgnoreCase(serverInfo.getAddress())) {
                     found = true;
                     break;
                 }
             }
+            /**
+             * 如果连接的节点不存在于目标节点中，则切换连接节点
+             */
             if (!found) {
                 LoggerUtils.printIfInfoEnabled(LOGGER,
                         "Current connected server {} is not in latest server list, switch switchServerAsync",
@@ -235,14 +246,21 @@ public abstract class RpcClient implements Closeable {
     
     /**
      * Start this client.
+     *
+     * 启动RPC客户端
      */
     public final void start() throws NacosException {
-        
+        /**
+         * 使用CAS来更新为启动中状态
+         */
         boolean success = rpcClientStatus.compareAndSet(RpcClientStatus.INITIALIZED, RpcClientStatus.STARTING);
         if (!success) {
             return;
         }
-        
+
+        /**
+         * 创建调度服务
+         */
         clientEventExecutor = new ScheduledThreadPoolExecutor(2,
                 new NameThreadFactory("com.alibaba.nacos.client.remote.worker"));
         
@@ -269,8 +287,10 @@ public abstract class RpcClient implements Closeable {
                     if (isShutdown()) {
                         break;
                     }
-                    ReconnectContext reconnectContext = reconnectionSignal
-                            .poll(rpcClientConfig.connectionKeepAlive(), TimeUnit.MILLISECONDS);
+                    /**
+                     * 定时从工作队列取出任务
+                     */
+                    ReconnectContext reconnectContext = reconnectionSignal.poll(rpcClientConfig.connectionKeepAlive(), TimeUnit.MILLISECONDS);
                     if (reconnectContext == null) {
                         // check alive time.
                         if (System.currentTimeMillis() - lastActiveTimeStamp >= rpcClientConfig.connectionKeepAlive()) {
@@ -305,18 +325,33 @@ public abstract class RpcClient implements Closeable {
                         }
                         
                     }
-                    
+
+                    /**
+                     * 当内容中服务节点地址不为空时
+                     */
                     if (reconnectContext.serverInfo != null) {
                         // clear recommend server if server is not in server list.
+                        /**
+                         * 服务节点是否存在标志位
+                         */
                         boolean serverExist = false;
+                        /**
+                         * 从服务列表中获取重连节点，因为该消息的消费可能由于某些原因导致延迟了
+                         */
                         for (String server : getServerListFactory().getServerList()) {
                             ServerInfo serverInfo = resolveServerInfo(server);
                             if (serverInfo.getServerIp().equals(reconnectContext.serverInfo.getServerIp())) {
+                                /**
+                                 * 重连节点在服务节点中存在
+                                 */
                                 serverExist = true;
                                 reconnectContext.serverInfo.serverPort = serverInfo.serverPort;
                                 break;
                             }
                         }
+                        /**
+                         * 没有找到服务节点，即忽略该节点
+                         */
                         if (!serverExist) {
                             LoggerUtils.printIfInfoEnabled(LOGGER,
                                     "[{}] Recommend server is not in server list, ignore recommend server {}",
@@ -326,6 +361,9 @@ public abstract class RpcClient implements Closeable {
                             
                         }
                     }
+                    /**
+                     * 执行重连
+                     */
                     reconnect(reconnectContext.serverInfo, reconnectContext.onRequestFail);
                 } catch (Throwable throwable) {
                     // Do nothing
@@ -335,6 +373,9 @@ public abstract class RpcClient implements Closeable {
         
         // connect to server, try to connect to server sync retryTimes times, async starting if failed.
         Connection connectToServer = null;
+        /**
+         * 将状态更新为启动中
+         */
         rpcClientStatus.set(RpcClientStatus.STARTING);
         
         int startUpRetryTimes = rpcClientConfig.retryTimes();
@@ -430,7 +471,11 @@ public abstract class RpcClient implements Closeable {
         }
         closeConnection(currentConnection);
     }
-    
+
+    /**
+     * 执行健康检查，请求目标节点，失败时重试，成功时返回
+     * @return
+     */
     private boolean healthCheck() {
         HealthCheckRequest healthCheckRequest = new HealthCheckRequest();
         if (this.currentConnection == null) {
@@ -464,6 +509,9 @@ public abstract class RpcClient implements Closeable {
     }
     
     protected void switchServerAsync(final ServerInfo recommendServerInfo, boolean onRequestFail) {
+        /**
+         * 将重链接上下文加入到队列中
+         */
         reconnectionSignal.offer(new ReconnectContext(recommendServerInfo, onRequestFail));
     }
     
@@ -631,27 +679,52 @@ public abstract class RpcClient implements Closeable {
      * @return response from server.
      */
     public Response request(Request request, long timeoutMills) throws NacosException {
+        /**
+         * 向Nacos Server发送请求，并在出错时重试，并接受响应
+         */
         int retryTimes = 0;
         Response response;
         Throwable exceptionThrow = null;
+        // 获取当前时间，用于计算是否超时
         long start = System.currentTimeMillis();
+        /**
+         * 重试次数小于等于配置的次数，且（未设置为超时时间或未超时）
+         */
         while (retryTimes <= rpcClientConfig.retryTimes() && (timeoutMills <= 0
                 || System.currentTimeMillis() < timeoutMills + start)) {
+            /**
+             * 标志位，是否等待重新连接，用于请求的服务端出现问题时，此时设置标志位为true，等待重新连接
+             */
             boolean waitReconnect = false;
             try {
+                /**
+                 * 当前连接不存在，或客户端为运行，抛出异常
+                 */
                 if (this.currentConnection == null || !isRunning()) {
                     waitReconnect = true;
                     throw new NacosException(NacosException.CLIENT_DISCONNECT,
                             "Client not connected, current status:" + rpcClientStatus.get());
                 }
+                /**
+                 * 执行请求，获取响应
+                 */
                 response = this.currentConnection.request(request, timeoutMills);
+                // 未获取到响应，抛出服务错误异常
                 if (response == null) {
                     throw new NacosException(SERVER_ERROR, "Unknown Exception.");
                 }
+                /**
+                 * 获取到错误响应，依次处理：
+                 * 1.如果错误码为UN_REGISTER，则表示为服务端离线，需要等待重新连接另一个客户端
+                 * 2.直接报错
+                 */
                 if (response instanceof ErrorResponse) {
                     if (response.getErrorCode() == NacosException.UN_REGISTER) {
                         synchronized (this) {
                             waitReconnect = true;
+                            /**
+                             * 设置RPC客户端状态为不健康，并切换服务端
+                             */
                             if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
                                 LoggerUtils.printIfErrorEnabled(LOGGER,
                                         "Connection is unregistered, switch server, connectionId = {}, request = {}",
@@ -671,6 +744,9 @@ public abstract class RpcClient implements Closeable {
                 if (waitReconnect) {
                     try {
                         // wait client to reconnect.
+                        /**
+                         * 等待重新连接，
+                         */
                         Thread.sleep(Math.min(100, timeoutMills / 3));
                     } catch (Exception exception) {
                         // Do nothing.
@@ -687,11 +763,14 @@ public abstract class RpcClient implements Closeable {
             retryTimes++;
             
         }
-        
+
+        /**
+         * 执行到这一步，代表请求超时或连续请求重试多次仍然失败
+         */
         if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
             switchServerAsyncOnRequestFail();
         }
-        
+
         if (exceptionThrow != null) {
             throw (exceptionThrow instanceof NacosException) ? (NacosException) exceptionThrow
                     : new NacosException(SERVER_ERROR, exceptionThrow);
@@ -1007,7 +1086,10 @@ public abstract class RpcClient implements Closeable {
     public Map<String, String> getLabels() {
         return rpcClientConfig.labels();
     }
-    
+
+    /**
+     * 用于重新连接的上下文内容
+     */
     static class ReconnectContext {
         
         public ReconnectContext(ServerInfo serverInfo, boolean onRequestFail) {

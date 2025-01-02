@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * History management controller.
+ * 配置历史管理控制器
  *
  * @author Nacos
  */
@@ -55,7 +55,7 @@ public class HistoryController {
     }
     
     /**
-     * Query the list history config. notes:
+     * 精确搜索配置历史列表，支持分页
      *
      * @param dataId   dataId string value.
      * @param group    group string value.
@@ -75,8 +75,17 @@ public class HistoryController {
             @RequestParam(value = "appName", required = false) String appName,
             @RequestParam(value = "pageNo", required = false) Integer pageNo,
             @RequestParam(value = "pageSize", required = false) Integer pageSize, ModelMap modelMap) {
+        /**
+         * 默认第一页
+         */
         pageNo = null == pageNo ? 1 : pageNo;
+        /**
+         * 默认每页100条
+         */
         pageSize = null == pageSize ? 100 : pageSize;
+        /**
+         * 每页最大500条
+         */
         pageSize = Math.min(500, pageSize);
         // configInfoBase has no appName field.
         return historyService.listConfigHistory(dataId, group, tenant, pageNo, pageSize);

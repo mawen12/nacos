@@ -21,6 +21,8 @@ import com.alibaba.nacos.api.config.remote.request.AbstractConfigRequest;
 /**
  * config change sync request on clusters.
  *
+ * 用于向集群中其他节点通知配置变更同步请求
+ *
  * @author liuzunfei
  * @version $Id: ConfigChangeClusterSyncRequest.java, v 0.1 2020年08月11日 4:30 PM liuzunfei Exp $
  */

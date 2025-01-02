@@ -28,33 +28,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ConfigChangeHandler.
+ * 配置变更处理程序，单例设计模式
  *
  * @author rushsky518
  */
 public class ConfigChangeHandler {
-    
-    private static class ConfigChangeHandlerHolder {
-        
-        private static final ConfigChangeHandler INSTANCE = new ConfigChangeHandler();
-    }
+
+    private final List<ConfigChangeParser> parserList;
     
     private ConfigChangeHandler() {
         this.parserList = new LinkedList<>();
-        
+        /**
+         * 通过SPI来查找类，默认情况下不会加载任何类，因此若要监听配置变更，只能使用Properties或Yaml。
+         * 也可以通过自定义的方式来实现特殊类型的比较。
+         */
         Collection<ConfigChangeParser> loader = NacosServiceLoader.load(ConfigChangeParser.class);
         this.parserList.addAll(loader);
 
+        /**
+         * 默认支持Properties和Yml配置类型
+         */
         this.parserList.add(new PropertiesChangeParser());
         this.parserList.add(new YmlChangeParser());
     }
-    
+
+    /**
+     * 返回当前单例
+     * @return
+     */
     public static ConfigChangeHandler getInstance() {
         return ConfigChangeHandlerHolder.INSTANCE;
     }
     
     /**
-     * Parse changed data.
+     * 对新旧内容进行比较，并返回发生变化（ADDED, MODIFIED, DELETED）的配置项
      *
      * @param oldContent old data
      * @param newContent new data
@@ -63,6 +70,9 @@ public class ConfigChangeHandler {
      * @throws IOException io exception
      */
     public Map<String, ConfigChangeItem> parseChangeData(String oldContent, String newContent, String type) throws IOException {
+        /**
+         * 使用具体解析器来解析对应的前后差异
+         */
         for (ConfigChangeParser changeParser : this.parserList) {
             if (changeParser.isResponsibleFor(type)) {
                 return changeParser.doParse(oldContent, newContent, type);
@@ -71,7 +81,9 @@ public class ConfigChangeHandler {
         
         return Collections.emptyMap();
     }
-    
-    private final List<ConfigChangeParser> parserList;
-    
+
+    private static class ConfigChangeHandlerHolder {
+
+        private static final ConfigChangeHandler INSTANCE = new ConfigChangeHandler();
+    }
 }

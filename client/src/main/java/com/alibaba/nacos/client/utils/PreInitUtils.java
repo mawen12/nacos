@@ -33,10 +33,15 @@ public class PreInitUtils {
     
     /**
      * Async pre load cost component.
+     *
+     * 使用线程异步初始化{@link com.fasterxml.jackson.databind.ObjectMapper}，以及初始化{@link com.alibaba.nacos.client.auth.ram.identify.CredentialService}
      */
     @SuppressWarnings("PMD.AvoidManuallyCreateThreadRule")
     public static void asyncPreLoadCostComponent() {
         Thread preLoadThread = new Thread(() -> {
+            /**
+             * 异步初始化{@link com.fasterxml.jackson.databind.ObjectMapper}，避免主线程浪费几百毫秒
+             */
             // Jackson util will init static {@code ObjectMapper}, which will cost hundreds milliseconds.
             JacksonUtils.createEmptyJsonNode();
             // Ram auth plugin will try to get credential from env and system when leak input identity by properties.

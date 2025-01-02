@@ -20,7 +20,7 @@ import com.alibaba.nacos.common.http.param.MediaType;
 import com.alibaba.nacos.common.utils.StringUtils;
 
 /**
- * Config file type enum.
+ * 配置格式枚举
  *
  * @author klw
  * @date 2019/7/1 10:21
@@ -28,47 +28,47 @@ import com.alibaba.nacos.common.utils.StringUtils;
 public enum FileTypeEnum {
     
     /**
-     * Yaml file.
+     * YAML文件
      */
     YML("yaml", MediaType.TEXT_PLAIN),
     
     /**
-     * Yaml file.
+     * YAML文件
      */
     YAML("yaml", MediaType.TEXT_PLAIN),
     
     /**
-     * Text file.
+     * 文本文件
      */
     TXT("text", MediaType.TEXT_PLAIN),
     
     /**
-     * Text file.
+     * 文件文件
      */
     TEXT("text", MediaType.TEXT_PLAIN),
     
     /**
-     * Json file.
+     * JSON文件
      */
     JSON("json", MediaType.APPLICATION_JSON),
     
     /**
-     * Xml file.
+     * XML文件
      */
     XML("xml", MediaType.APPLICATION_XML),
     
     /**
-     * Html file.
+     * HTML文件
      */
     HTM("html", MediaType.TEXT_HTML),
     
     /**
-     * Html file.
+     * HTML文件
      */
     HTML("html", MediaType.TEXT_HTML),
     
     /**
-     * Properties file.
+     * PROPERTIES文件
      */
     PROPERTIES("properties", MediaType.TEXT_PLAIN);
     

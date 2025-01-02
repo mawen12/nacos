@@ -44,7 +44,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
- * Derby operation in stand-alone mode.
+ * 用于单体模式的Derby数据库的操作
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
@@ -53,9 +53,15 @@ import java.util.stream.Collectors;
 public class StandaloneDatabaseOperateImpl implements BaseDatabaseOperate {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(StandaloneDatabaseOperateImpl.class);
-    
+
+    /**
+     * 负责执行SQL
+     */
     private JdbcTemplate jdbcTemplate;
-    
+
+    /**
+     * 负责管理事务（开启事务、提交事务、回滚事务）
+     */
     private TransactionTemplate transactionTemplate;
     
     @PostConstruct

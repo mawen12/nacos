@@ -72,6 +72,8 @@ import static com.alibaba.nacos.api.exception.NacosException.CLIENT_INVALID_PARA
 /**
  * Cluster node management in Nacos.
  *
+ * 管理 Nacos 中的集群节点
+ *
  * <p>{@link ServerMemberManager#init()} Cluster node manager initialization {@link ServerMemberManager#shutdown()} The
  * cluster node manager is down {@link ServerMemberManager#getSelf()} Gets local node information
  * {@link ServerMemberManager#getServerList()} Gets the cluster node dictionary

@@ -202,6 +202,9 @@ public final class RequestGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<com.alibaba.nacos.api.grpc.auto.Payload> request(
         com.alibaba.nacos.api.grpc.auto.Payload request) {
+      /**
+       * 执行Grpc请求
+       */
       return futureUnaryCall(
           getChannel().newCall(getRequestMethod(), getCallOptions()), request);
     }

@@ -68,17 +68,25 @@ public abstract class ConfigTransportClient {
     }
     
     public ConfigTransportClient(NacosClientProperties properties, ServerListManager serverListManager) {
-        
+        /**
+         * 解析编码，从 PROPERTIES(encode).trim() -> DEFAULT(UTF-8) 取值
+         */
         String encodeTmp = properties.getProperty(PropertyKeyConst.ENCODE);
         if (StringUtils.isBlank(encodeTmp)) {
             this.encode = Constants.ENCODE;
         } else {
             this.encode = encodeTmp.trim();
         }
-        
+
+        /**
+         * 解析租户（等于命名空间），从 PROPERTIES(namespace) 取值
+         */
         this.tenant = properties.getProperty(PropertyKeyConst.NAMESPACE);
         this.serverListManager = serverListManager;
         this.properties = properties.asProperties();
+        /**
+         * 构造安全代理
+         */
         this.securityProxy = new SecurityProxy(serverListManager.getServerUrls(),
                 ConfigHttpClientManager.getInstance().getNacosRestTemplate());
     }
@@ -100,7 +108,14 @@ public abstract class ConfigTransportClient {
     }
     
     /**
-     * get common header.
+     * 返回通用请求头：
+     * <ul>
+     *     <li>Client-AppName:应用名称</li>
+     *     <li>Client-RequestTS:当前时间戳</li>
+     *     <li>Client-RequestToken:</li>
+     *     <li>exConfigInfo:扩展配置信息，默认为true</li>
+     *     <li>charset:字符编码，默认为UTF-8</li>
+     * </ul>
      *
      * @return headers.
      */
@@ -130,7 +145,13 @@ public abstract class ConfigTransportClient {
      * base start client.
      */
     public void start() throws NacosException {
+        /**
+         * 安全代理登录系统
+         */
         securityProxy.login(this.properties);
+        /**
+         * 调度服务每5s刷新token
+         */
         this.executor.scheduleWithFixedDelay(() -> securityProxy.login(properties), 0,
                 this.securityInfoRefreshIntervalMills, TimeUnit.MILLISECONDS);
         startInternal();

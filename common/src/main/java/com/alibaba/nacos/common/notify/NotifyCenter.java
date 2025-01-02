@@ -39,6 +39,8 @@ import static com.alibaba.nacos.api.exception.NacosException.SERVER_ERROR;
 /**
  * Unified Event Notify Center.
  *
+ * 单例设计模式
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
  */
@@ -292,9 +294,15 @@ public class NotifyCenter {
         if (ClassUtils.isAssignableFrom(SlowEvent.class, eventType)) {
             return INSTANCE.sharePublisher.publish(event);
         }
-        
+
+        /**
+         * 使用完全限定类名作为事件主题
+         */
         final String topic = ClassUtils.getCanonicalName(eventType);
-        
+
+        /**
+         * 获取主题对应的事件发布器
+         */
         EventPublisher publisher = INSTANCE.publisherMap.get(topic);
         if (publisher != null) {
             return publisher.publish(event);
@@ -338,7 +346,10 @@ public class NotifyCenter {
         if (ClassUtils.isAssignableFrom(SlowEvent.class, eventType)) {
             return INSTANCE.sharePublisher;
         }
-        
+
+        /**
+         * 使用全限定类名作为主题
+         */
         final String topic = ClassUtils.getCanonicalName(eventType);
         synchronized (NotifyCenter.class) {
             // MapUtils.computeIfAbsent is a unsafe method.

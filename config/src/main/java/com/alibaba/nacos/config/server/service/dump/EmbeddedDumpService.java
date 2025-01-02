@@ -48,6 +48,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Embedded dump service.
  *
+ * 内置Dump服务
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 @Conditional(ConditionOnEmbeddedStorage.class)
@@ -120,8 +122,7 @@ public class EmbeddedDumpService extends DumpService {
                     for (; ; ) {
                         try {
                             dumpOperate();
-                            protocol.protocolMetaData().unSubscribe(PersistenceConstant.CONFIG_MODEL_RAFT_GROUP,
-                                    MetadataKey.LEADER_META_DATA, this);
+                            protocol.protocolMetaData().unSubscribe(PersistenceConstant.CONFIG_MODEL_RAFT_GROUP, MetadataKey.LEADER_META_DATA, this);
                             canEnd = true;
                         } catch (Throwable ex) {
                             if (!shouldRetry(ex)) {
@@ -140,8 +141,7 @@ public class EmbeddedDumpService extends DumpService {
             }
         };
         
-        protocol.protocolMetaData()
-                .subscribe(PersistenceConstant.CONFIG_MODEL_RAFT_GROUP, MetadataKey.LEADER_META_DATA, observer);
+        protocol.protocolMetaData().subscribe(PersistenceConstant.CONFIG_MODEL_RAFT_GROUP, MetadataKey.LEADER_META_DATA, observer);
         
         // We must wait for the dump task to complete the callback operation before
         // continuing with the initialization

@@ -76,6 +76,9 @@ public class EmbeddedConfigInfoAggrPersistServiceImpl implements ConfigInfoAggrP
     public EmbeddedConfigInfoAggrPersistServiceImpl(DatabaseOperate databaseOperate) {
         this.databaseOperate = databaseOperate;
         this.dataSourceService = DynamicDataSource.getInstance().getDataSource();
+        /**
+         * 从配置(Properties|JVM|ENV)中读取配置nacos.plugin.datasource.log.enabled的值
+         */
         Boolean isDataSourceLogEnable = EnvUtil.getProperty(CommonConstant.NACOS_PLUGIN_DATASOURCE_LOG, Boolean.class,
                 false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);

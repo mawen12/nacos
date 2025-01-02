@@ -49,6 +49,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Listener Management.
  *
+ * 配置数据缓存
+ *
  * @author Nacos
  */
 public class CacheData {
@@ -91,44 +93,75 @@ public class CacheData {
         }
         return scheduledExecutor;
     }
-    
+
+    /**
+     * 是否使用snapshot进行缓存内容的初始化，默认为true。
+     * 为true时表示在初始化CacheData后，读取本地的文件：FAILOVER_FILE -> SNAPSHOT_FILE
+     */
     static boolean initSnapshot;
     
     static {
+        /**
+         * 解析是否采用snapshot初始化配置内容，从 PROPERTIES("nacos.cache.data.init.snapshot") -> DEFAULT(true)
+         */
         initSnapshot = NacosClientProperties.PROTOTYPE.getBoolean("nacos.cache.data.init.snapshot", true);
         LOGGER.info("nacos.cache.data.init.snapshot = {} ", initSnapshot);
     }
     
     public final String envName;
-    
+
+    /**
+     * 配置过滤器链，其中由基于密钥对配置内容进行解密
+     */
     private final ConfigFilterChainManager configFilterChainManager;
-    
+
+    /**
+     * 配置所在的dataId
+     */
     public final String dataId;
-    
+
+    /**
+     * 配置所在的分组名称
+     */
     public final String group;
-    
+
+    /**
+     * 配置所在的命名空间
+     */
     public final String tenant;
-    
+
+    /**
+     * 保存监听器的列表
+     */
     private final CopyOnWriteArrayList<ManagerListenerWrap> listeners;
-    
+
+    /**
+     * 配置内容的md5
+     */
     private volatile String md5;
     
     /**
-     * whether use local config.
+     * 是否使用本地配置
      */
     private volatile boolean isUseLocalConfig = false;
     
     /**
-     * last modify time.
+     * 本地配置最后的更新时间，即本地
      */
     private volatile long localConfigLastModified;
-    
+
+    /**
+     * 配置内容
+     */
     private volatile String content;
-    
+
+    /**
+     * 配置内容的密钥
+     */
     private volatile String encryptedDataKey;
     
     /**
-     * local cache change timestamp.
+     * 配置内容最后的编辑时间
      */
     private final AtomicLong lastModifiedTs = new AtomicLong(0);
     
@@ -137,9 +170,17 @@ public class CacheData {
      * to true if receive config change notification.
      */
     private final AtomicBoolean receiveNotifyChanged = new AtomicBoolean(false);
-    
+
+    /**
+     * 任务Id,关联性：
+     *  - 可通过{@link ClientWorker.ConfigRpcTransportClient#ensureRpcClient(String)}来获取{@link com.alibaba.nacos.common.remote.client.RpcClient}
+     *  - 可通过{@link ClientWorker.ConfigRpcTransportClient#ensureSyncExecutor(String)}来获取{@link ClientWorker.ConfigRpcTransportClient#multiTaskExecutor}
+     */
     private int taskId;
-    
+
+    /**
+     * 当前是否已经完成初始化，标志位
+     */
     private volatile boolean isInitializing = true;
     
     /**
@@ -148,7 +189,8 @@ public class CacheData {
     private final AtomicBoolean isConsistentWithServer = new AtomicBoolean();
     
     /**
-     * if is cache data is discard,need to remove.
+     * 是否丢弃，true表示丢弃。默认为不丢弃。
+     * 设置为丢弃后，在下次检查时候，同步清除服务端的对应监听
      */
     private volatile boolean isDiscard = false;
     
@@ -176,6 +218,9 @@ public class CacheData {
     
     public void setContent(String content) {
         this.content = content;
+        /**
+         * md5是通过计算content得来的
+         */
         this.md5 = getMd5String(this.content);
     }
     
@@ -219,7 +264,11 @@ public class CacheData {
             throw new IllegalArgumentException("listener is null");
         }
         ManagerListenerWrap wrap;
+
         if (listener instanceof AbstractConfigChangeListener) {
+            /**
+             * 获取当前的监听器配置，并将当前加密后的配置内容写入到监听器中
+             */
             ConfigResponse cr = new ConfigResponse();
             cr.setDataId(dataId);
             cr.setGroup(group);
@@ -231,7 +280,10 @@ public class CacheData {
         } else {
             wrap = new ManagerListenerWrap(listener, md5);
         }
-        
+
+        /**
+         * 将监听器注册到集合中
+         */
         if (listeners.addIfAbsent(wrap)) {
             LOGGER.info("[{}] [add-listener] ok, tenant={}, dataId={}, group={}, cnt={}", envName, tenant, dataId,
                     group, listeners.size());
@@ -317,9 +369,15 @@ public class CacheData {
     public String toString() {
         return "CacheData [" + dataId + ", " + group + "]";
     }
-    
+
+    /**
+     * 校验监听器的md5
+     */
     void checkListenerMd5() {
         for (ManagerListenerWrap wrap : listeners) {
+            /**
+             * 检查本地的
+             */
             if (!md5.equals(wrap.lastCallMd5)) {
                 safeNotifyListener(dataId, group, content, type, md5, encryptedDataKey, wrap);
             }
@@ -337,7 +395,10 @@ public class CacheData {
         }
         return true;
     }
-    
+
+    /**
+     * 长通知任务
+     */
     class LongNotifyHandler implements Runnable {
         
         public LongNotifyHandler(String listenerClass, String dataId, String group, String tenant, String md5,
@@ -369,13 +430,16 @@ public class CacheData {
         
         @Override
         public void run() {
+            /**
+             * 获取线程调用栈
+             */
             String blockTrace = getTrace(thread.getStackTrace(), 5);
             LOGGER.warn("[{}] [notify-block-monitor] dataId={}, group={},tenant={}, md5={}, "
-                            + "receiveConfigInfo execute over {} mills，thread trace block : {}", envName, dataId, group, tenant,
-                    md5, timeoutMills, blockTrace);
-            NotifyCenter.publishEvent(
-                    new ChangeNotifyBlockEvent(this.listenerClass, dataId, group, tenant, this.startTime,
-                            System.currentTimeMillis(), blockTrace));
+                            + "receiveConfigInfo execute over {} mills，thread trace block : {}", envName, dataId, group, tenant, md5, timeoutMills, blockTrace);
+            /**
+             * 发布通知事件
+             */
+            NotifyCenter.publishEvent(new ChangeNotifyBlockEvent(this.listenerClass, dataId, group, tenant, this.startTime, System.currentTimeMillis(), blockTrace));
         }
         
     }
@@ -417,8 +481,7 @@ public class CacheData {
                     if (listener instanceof AbstractSharedListener) {
                         AbstractSharedListener adapter = (AbstractSharedListener) listener;
                         adapter.fillContext(dataId, group);
-                        LOGGER.info("[{}] [notify-context] dataId={}, group={},tenant={}, md5={}", envName, dataId,
-                                group, tenant, md5);
+                        LOGGER.info("[{}] [notify-context] dataId={}, group={},tenant={}, md5={}", envName, dataId, group, tenant, md5);
                     }
                     // Before executing the callback, set the thread classloader to the classloader of
                     // the specific webapp to avoid exceptions or misuses when calling the spi interface in
@@ -432,17 +495,28 @@ public class CacheData {
                     cr.setEncryptedDataKey(encryptedDataKey);
                     configFilterChainManager.doFilter(null, cr);
                     String contentTmp = cr.getContent();
-                    timeSchedule = getNotifyBlockMonitor().schedule(
-                            new LongNotifyHandler(listener.getClass().getSimpleName(), dataId, group, tenant, md5,
-                                    notifyWarnTimeout, Thread.currentThread()), notifyWarnTimeout,
-                            TimeUnit.MILLISECONDS);
+                    /**
+                     * 创建调度任务，每隔6s执行一次
+                     */
+                    timeSchedule = getNotifyBlockMonitor().schedule(new LongNotifyHandler(listener.getClass().getSimpleName(), dataId, group, tenant, md5, notifyWarnTimeout, Thread.currentThread()), notifyWarnTimeout, TimeUnit.MILLISECONDS);
+                    /**
+                     * 更新当前监听器
+                     */
                     listenerWrap.inNotifying = true;
+                    /**
+                     * 调用监听器
+                     */
                     listener.receiveConfigInfo(contentTmp);
                     // compare lastContent and content
                     if (listener instanceof AbstractConfigChangeListener) {
-                        Map<String, ConfigChangeItem> data = ConfigChangeHandler.getInstance()
-                                .parseChangeData(listenerWrap.lastContent, contentTmp, type);
+                        /**
+                         * 解析发生内容变更的配置项
+                         */
+                        Map<String, ConfigChangeItem> data = ConfigChangeHandler.getInstance().parseChangeData(listenerWrap.lastContent, contentTmp, type);
                         ConfigChangeEvent event = new ConfigChangeEvent(data);
+                        /**
+                         * 向监听器推送变更内容
+                         */
                         ((AbstractConfigChangeListener) listener).receiveConfigChange(event);
                         listenerWrap.lastContent = contentTmp;
                     }
@@ -490,7 +564,7 @@ public class CacheData {
     
     @SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
     abstract class NotifyTask implements Runnable {
-        
+
         boolean async = false;
         
         public boolean isAsync() {
@@ -508,13 +582,20 @@ public class CacheData {
     }
     
     private String loadCacheContentFromDiskLocal(String name, String dataId, String group, String tenant) {
+        /**
+         * 先从failover文件读取配置内容
+         */
         String content = LocalConfigInfoProcessor.getFailover(name, dataId, group, tenant);
+        /**
+         * 如果failover文件不存在，则从snapshot中读取配置内容
+         */
         content = (null != content) ? content : LocalConfigInfoProcessor.getSnapshot(name, dataId, group, tenant);
         return content;
     }
     
     /**
-     * 1.first add listener.default is false;need to check. 2.receive config change notify,set false;need to check.
+     * 1.first add listener.default is false;need to check.
+     * 2.receive config change notify,set false;need to check.
      * 3.last listener is remove,set to false;need to check
      *
      * @return
@@ -552,8 +633,17 @@ public class CacheData {
         this.listeners = new CopyOnWriteArrayList<>();
         this.isInitializing = true;
         if (initSnapshot) {
+            /**
+             * 首次初始化时，从本地文件中读取配置内容：FAILOVER_FILE -> SNAPSHOT_FILE
+             */
             this.content = loadCacheContentFromDiskLocal(envName, dataId, group, tenant);
+            /**
+             * 从本地文件中读取配置加密密钥：
+             */
             this.encryptedDataKey = loadEncryptedDataKeyFromDiskLocal(envName, dataId, group, tenant);
+            /**
+             * 使用配置内容生成md5
+             */
             this.md5 = getMd5String(this.content);
         }
     }
@@ -569,13 +659,18 @@ public class CacheData {
     }
     
     private String loadEncryptedDataKeyFromDiskLocal(String envName, String dataId, String group, String tenant) {
-        String encryptedDataKey = LocalEncryptedDataKeyProcessor.getEncryptDataKeyFailover(envName, dataId, group,
-                tenant);
+        /**
+         * 先从failover读取配置密钥
+         */
+        String encryptedDataKey = LocalEncryptedDataKeyProcessor.getEncryptDataKeyFailover(envName, dataId, group, tenant);
         
         if (encryptedDataKey != null) {
             return encryptedDataKey;
         }
-        
+
+        /**
+         * 如果failover文件不存在，则从snapshot读取配置密钥
+         */
         return LocalEncryptedDataKeyProcessor.getEncryptDataKeySnapshot(envName, dataId, group, tenant);
     }
     
@@ -584,7 +679,10 @@ public class CacheData {
         boolean inNotifying = false;
         
         final Listener listener;
-        
+
+        /**
+         * 配置内容的md5值
+         */
         String lastCallMd5 = Constants.NULL;
         
         /**

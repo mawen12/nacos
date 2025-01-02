@@ -21,6 +21,8 @@ import com.alibaba.nacos.client.config.impl.LocalConfigInfoProcessor;
 /**
  * Snapshot switch.
  *
+ * 快照切换
+ *
  * @author Nacos
  */
 public class SnapShotSwitch {
@@ -28,12 +30,20 @@ public class SnapShotSwitch {
     /**
      * whether use local cache.
      */
+    /**
+     * 是否使用本地快照，标志位
+     */
     private static Boolean isSnapShot = true;
     
     public static Boolean getIsSnapShot() {
         return isSnapShot;
     }
-    
+
+    /**
+     * 更新标志位，并清除所有快照
+     *
+     * @param isSnapShot
+     */
     public static void setIsSnapShot(Boolean isSnapShot) {
         SnapShotSwitch.isSnapShot = isSnapShot;
         LocalConfigInfoProcessor.cleanAllSnapshot();

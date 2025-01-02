@@ -25,6 +25,8 @@ import java.util.Map;
 /**
  * gRPC client for sdk.
  *
+ * gRPC SDK 客户端
+ *
  * @author liuzunfei
  * @version $Id: GrpcSdkClient.java, v 0.1 2020年09月07日 11:05 AM liuzunfei Exp $
  */

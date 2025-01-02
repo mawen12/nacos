@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
 /**
  * DataSource plugin Mapper sql proxy.
  *
+ * 支持日志记录的Mapper动态代理实现。
+ * 代理设计模式。
+ *
  * @author hyx
  **/
 public class MapperProxy implements InvocationHandler {
@@ -81,6 +84,9 @@ public class MapperProxy implements InvocationHandler {
         } else {
             sql = invoke.toString();
         }
+        /**
+         * 记录查询方法、SQL语句、参数
+         */
         LOGGER.info("[{}] METHOD : {}, SQL : {}, ARGS : {}", className, methodName, sql, JacksonUtils.toJson(args));
         return invoke;
     }

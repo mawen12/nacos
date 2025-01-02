@@ -87,7 +87,8 @@ public interface ConfigInfoPersistService {
             Map<String, Object> configAdvanceInfo);
     
     /**
-     * Write to the main table, insert or update cas.
+     * 基于比较的新增或修改操作，该数据将写入到主库，因为从库不支持写操作。
+     * 如果之前不存在，则直接插入；反之进行更新，在更新时使用md5作为条件，实现Compare-And-Set操作
      *
      * @param srcIp             remote ip
      * @param srcUser           user

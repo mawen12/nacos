@@ -23,6 +23,8 @@ import java.util.Properties;
 /**
  * Config Filter Interface.
  *
+ * 配置过滤器接口
+ *
  * <p>DO NOT implement this interface directly, you should extend <code>AbstractConfigFilter</code>.
  *
  * @author Nacos
@@ -31,14 +33,14 @@ import java.util.Properties;
 public interface IConfigFilter {
     
     /**
-     * Init.
+     * 使用属性初始化配置过滤器
      *
      * @param properties Filter Config
      */
     void init(Properties properties);
     
     /**
-     * do filter.
+     * 执行过滤
      *
      * @param request     request
      * @param response    response
@@ -49,14 +51,14 @@ public interface IConfigFilter {
             throws NacosException;
     
     /**
-     * Get order.
+     * 获取配置顺序
      *
      * @return order number
      */
     int getOrder();
     
     /**
-     * Get filterName.
+     * 获取配置名称
      *
      * @return filter name
      */

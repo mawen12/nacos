@@ -32,6 +32,8 @@ import java.util.List;
 /**
  * The mapper of config info.
  *
+ * 提供对ConfigInfo的数据操作
+ *
  * @author hyx
  **/
 
@@ -320,6 +322,9 @@ public interface ConfigInfoMapper extends Mapper {
     /**
      * find the count of config info. The default sql: SELECT count(*) FROM config_info ...
      *
+     * 精准匹配值来查询记录数
+     * @see {@link #findConfigInfoLike4PageCountRows(MapperContext)} 模糊匹配
+     *
      * @param context The mpa of dataId, groupId and appName.
      * @return The count of config info.
      */
@@ -330,23 +335,41 @@ public interface ConfigInfoMapper extends Mapper {
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final List<Object> paramList = new ArrayList<>();
-        
+
+        /**
+         * 原始SQL，查询配置记录数
+         */
         final String sqlCount = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
+        /**
+         * 使用精准匹配tenant_id
+         */
         where.append(" tenant_id=? ");
         paramList.add(tenantId);
+        /**
+         * 如果配置Id不为空，则使用精准匹配data_id
+         */
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id=? ");
             paramList.add(dataId);
         }
+        /**
+         * 如果分组不为空，则使用精准匹配group_id
+         */
         if (StringUtils.isNotBlank(group)) {
             where.append(" AND group_id=? ");
             paramList.add(group);
         }
+        /**
+         * 如果应用名称不为空，则使用精准匹配app_name字段
+         */
         if (StringUtils.isNotBlank(appName)) {
             where.append(" AND app_name=? ");
             paramList.add(appName);
         }
+        /**
+         * 如果查询内容不为空，则使用模糊匹配content字段
+         */
         if (!StringUtils.isBlank(content)) {
             where.append(" AND content LIKE ? ");
             paramList.add(content);
@@ -374,7 +397,9 @@ public interface ConfigInfoMapper extends Mapper {
     
     /**
      * Query config info count. The default sql: SELECT count(*) FROM config_info ...
+     * 使用模糊匹配进行记录数查询
      *
+     * @see {@link #findConfigInfo4PageCountRows(MapperContext)} 精准匹配
      * @param context The map of dataId, group, appName, content
      * @return The sql of querying config info count
      */
@@ -386,23 +411,41 @@ public interface ConfigInfoMapper extends Mapper {
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         
         final List<Object> paramList = new ArrayList<>();
-        
+
+        /**
+         * 原始SQL，查询配置记录数
+         */
         final String sqlCountRows = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
+        /**
+         * 使用模糊匹配tenant_id
+         */
         where.append(" tenant_id LIKE ? ");
         paramList.add(tenantId);
+        /**
+         * 如果配置Id不为空，则使用模糊匹配data_id
+         */
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
             paramList.add(dataId);
         }
+        /**
+         * 如果分组不为空，则使用模糊匹配group_id
+         */
         if (!StringUtils.isBlank(group)) {
             where.append(" AND group_id LIKE ? ");
             paramList.add(group);
         }
+        /**
+         * 如果应用名称不为空，则使用精准匹配app_name字段
+         */
         if (!StringUtils.isBlank(appName)) {
             where.append(" AND app_name = ? ");
             paramList.add(appName);
         }
+        /**
+         * 如果查询内容不为空，则使用模糊匹配content字段
+         */
         if (!StringUtils.isBlank(content)) {
             where.append(" AND content LIKE ? ");
             paramList.add(content);
@@ -503,6 +546,9 @@ public interface ConfigInfoMapper extends Mapper {
         paramList.add(context.getWhereParameter(FieldConstant.GROUP_ID));
         paramList.add(context.getWhereParameter(FieldConstant.TENANT_ID));
         paramList.add(context.getWhereParameter(FieldConstant.MD5));
+        /**
+         * 原子的Compare-And-Set更新语句，核心在于 (md5=? OR md5 IS NULL OR md5='')
+         */
         String sql = "UPDATE config_info SET " + "content=?, md5=?, src_ip=?, src_user=?, gmt_modified="
                 + getFunction("NOW()")
                 + ", app_name=?, c_desc=?, c_use=?, effect=?, type=?, c_schema=?, encrypted_data_key=? "

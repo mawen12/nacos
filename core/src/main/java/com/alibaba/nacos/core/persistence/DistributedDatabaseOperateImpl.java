@@ -425,10 +425,7 @@ public class DistributedDatabaseOperateImpl extends RequestProcessor4CP implemen
             LoggerUtils.printIfDebugEnabled(LOGGER, "modifyRequests info : {}", sqlContext);
             
             // {timestamp}-{group}-{ip:port}-{signature}
-            
-            final String key =
-                    System.currentTimeMillis() + "-" + group() + "-" + memberManager.getSelf().getAddress() + "-"
-                            + MD5Utils.md5Hex(sqlContext.toString(), PersistenceConstant.DEFAULT_ENCODE);
+            final String key = System.currentTimeMillis() + "-" + group() + "-" + memberManager.getSelf().getAddress() + "-" + MD5Utils.md5Hex(sqlContext.toString(), PersistenceConstant.DEFAULT_ENCODE);
             WriteRequest request = WriteRequest.newBuilder().setGroup(group()).setKey(key)
                     .setData(ByteString.copyFrom(serializer.serialize(sqlContext)))
                     .putAllExtendInfo(EmbeddedStorageContextHolder.getCurrentExtendInfo())

@@ -34,6 +34,10 @@ import static com.alibaba.nacos.common.remote.client.RpcConstants.NACOS_PEER_RPC
 /**
  * TlsConfigFactory.
  *
+ * 简单工厂设计模式。
+ * 单例设计模式。
+ * Rpc客户端TLS配置工厂
+ *
  * @author stone-98
  */
 public class RpcClientTlsConfigFactory implements RpcTlsConfigFactory {
@@ -53,21 +57,53 @@ public class RpcClientTlsConfigFactory implements RpcTlsConfigFactory {
     /**
      * Create SDK client TLS config.
      *
+     * 创建SDK客户端TLS配置
+     *
      * @param properties Properties containing TLS configuration
      * @return RpcClientTlsConfig object representing the TLS configuration
      */
     @Override
     public RpcClientTlsConfig createSdkConfig(Properties properties) {
         RpcClientTlsConfig tlsConfig = new RpcClientTlsConfig();
+        /**
+         * 是否启用TLS，从 PROPERTIES(nacos.remote.client.rpc.tls.enable) -> DEFAULT(false)
+         */
         tlsConfig.setEnableTls(getBooleanProperty(properties, NACOS_CLIENT_RPC + TLS_ENABLE, false));
+        /**
+         * 是否启用相互认证，从 PROPERTIES(nacos.remote.client.rpc.tls.mutualAuth) -> DEFAULT(false)
+         */
         tlsConfig.setMutualAuthEnable(getBooleanProperty(properties, NACOS_CLIENT_RPC + MUTUAL_AUTH, false));
+        /**
+         * 请求协议，PROPERTIES(nacos.remote.client.rpc.tls.protocols)
+         */
         tlsConfig.setProtocols(properties.getProperty(NACOS_CLIENT_RPC + TLS_PROTOCOLS));
+        /**
+         * 密码，PROPERTIES(nacos.remote.client.rpc.tls.ciphers)
+         */
         tlsConfig.setCiphers(properties.getProperty(NACOS_CLIENT_RPC + TLS_CIPHERS));
+        /**
+         * 信任集合证书文件，PROPERTIES(nacos.remote.client.rpc.tls.trustCollectionChainPath)
+         */
         tlsConfig.setTrustCollectionCertFile(properties.getProperty(NACOS_CLIENT_RPC + TLS_TRUST_COLLECTION_CHAIN_PATH));
+        /**
+         * 证书链文件，PROPERTIES(nacos.remote.client.rpc.tls.certChainFile)
+         */
         tlsConfig.setCertChainFile(properties.getProperty(NACOS_CLIENT_RPC + TLS_CERT_CHAIN_PATH));
+        /**
+         * 证书私钥，PROPERTIES(nacos.remote.client.rpc.tls.certPrivateKey)
+         */
         tlsConfig.setCertPrivateKey(properties.getProperty(NACOS_CLIENT_RPC + TLS_CERT_KEY));
+        /**
+         * 是否信任全部，从 PROPERTIES(nacos.remote.client.rpc.tls.trustAll) -> DEFAULT(true)
+         */
         tlsConfig.setTrustAll(getBooleanProperty(properties, NACOS_CLIENT_RPC + TLS_TRUST_ALL, true));
+        /**
+         * 证书私钥密码，从 PROPERTIES(nacos.remote.client.rpc.tls.certPrivateKeyPassword)
+         */
         tlsConfig.setCertPrivateKeyPassword(properties.getProperty(NACOS_CLIENT_RPC + TLS_TRUST_PWD));
+        /**
+         * ssl提供者，从 PROPERTIES(nacos.remote.client.rpc.tls.provider)
+         */
         tlsConfig.setSslProvider(properties.getProperty(NACOS_CLIENT_RPC + TLS_PROVIDER));
         return tlsConfig;
     }

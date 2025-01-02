@@ -142,6 +142,8 @@ public class ConfigRawDiskService implements ConfigDiskService {
     
     /**
      * Deletes configuration files on disk.
+     *
+     * 删除磁盘上的配置文件
      */
     public void removeConfigInfo(String dataId, String group, String tenant) {
         FileUtils.deleteQuietly(targetFile(dataId, group, tenant));

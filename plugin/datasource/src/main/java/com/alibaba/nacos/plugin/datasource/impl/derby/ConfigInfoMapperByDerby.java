@@ -235,23 +235,41 @@ public class ConfigInfoMapperByDerby extends AbstractMapperByDerby implements Co
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
         
         List<Object> paramList = new ArrayList<>();
-        
+
+        /**
+         * 原始SQL，查询配置记录列表
+         */
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
+        /**
+         * 使用模糊匹配tenant_id
+         */
         where.append(" tenant_id LIKE ? ");
         paramList.add(tenantId);
+        /**
+         * 如果匹配Id不为空，则使用模糊匹配data_id
+         */
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
             paramList.add(dataId);
         }
+        /**
+         * 如果分组不为空，则使用模糊匹配group_id
+         */
         if (!StringUtils.isBlank(group)) {
             where.append(" AND group_id LIKE ? ");
             paramList.add(group);
         }
+        /**
+         * 如果应用名称不为空，则使用直接匹配app_name字段
+         */
         if (!StringUtils.isBlank(appName)) {
             where.append(" AND app_name = ? ");
             paramList.add(appName);
         }
+        /**
+         * 如果查询内容不为空，则使用模糊匹配content字段
+         */
         if (!StringUtils.isBlank(content)) {
             where.append(" AND content LIKE ? ");
             paramList.add(content);

@@ -20,30 +20,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * request to publish a config.
+ * 发布配置请求
  *
  * @author liuzunfei
  * @version $Id: ConfigPublishRequest.java, v 0.1 2020年07月16日 4:30 PM liuzunfei Exp $
+ * @see {@link com.alibaba.nacos.config.server.remote.ConfigPublishRequestHandler}
+ * @see {@link com.alibaba.nacos.api.config.remote.response.ConfigPublishResponse}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfig(String, String, String)}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfigCas(String, String, String, String)}
+ * @see {@link com.alibaba.nacos.api.config.ConfigService#publishConfigCas(String, String, String, String, String)}
  */
 public class ConfigPublishRequest extends AbstractConfigRequest {
-    
+
     String content;
-    
+
     String casMd5;
-    
+
     private Map<String, String> additionMap;
-    
+
     public ConfigPublishRequest() {
-    
+
     }
-    
+
     public ConfigPublishRequest(String dataId, String group, String tenant, String content) {
         this.content = content;
         super.setGroup(group);
         super.setTenant(tenant);
         super.setDataId(dataId);
     }
-    
+
     /**
      * get additional param.
      *
@@ -53,7 +58,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public String getAdditionParam(String key) {
         return additionMap == null ? null : additionMap.get(key);
     }
-    
+
     /**
      * put additional param value. will override if exist.
      *
@@ -66,7 +71,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
         }
         additionMap.put(key, value);
     }
-    
+
     /**
      * Getter method for property <tt>content</tt>.
      *
@@ -75,7 +80,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public String getContent() {
         return content;
     }
-    
+
     /**
      * Setter method for property <tt>content</tt>.
      *
@@ -84,7 +89,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public void setContent(String content) {
         this.content = content;
     }
-    
+
     /**
      * Getter method for property <tt>casMd5</tt>.
      *
@@ -93,7 +98,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public String getCasMd5() {
         return casMd5;
     }
-    
+
     /**
      * Setter method for property <tt>casMd5</tt>.
      *
@@ -102,7 +107,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public void setCasMd5(String casMd5) {
         this.casMd5 = casMd5;
     }
-    
+
     /**
      * Getter method for property <tt>casMd5</tt>.
      *
@@ -111,7 +116,7 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public Map<String, String> getAdditionMap() {
         return additionMap;
     }
-    
+
     /**
      * Setter method for property <tt>additionMap</tt>.
      *
@@ -120,5 +125,5 @@ public class ConfigPublishRequest extends AbstractConfigRequest {
     public void setAdditionMap(Map<String, String> additionMap) {
         this.additionMap = additionMap;
     }
-    
+
 }

@@ -21,6 +21,8 @@ import com.alibaba.nacos.common.task.AbstractDelayTask;
 /**
  * Dump data task.
  *
+ * 转储数据任务
+ *
  * @author Nacos
  */
 public class DumpTask extends AbstractDelayTask {

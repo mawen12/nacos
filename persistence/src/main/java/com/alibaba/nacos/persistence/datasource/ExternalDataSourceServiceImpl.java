@@ -42,7 +42,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Base data source.
+ * 外部存储数据源服务。支持多数据源，写主读从。
+ * 需要注意，外部的数据源并不限制Mysql，其支持的数据库底层由Spring处理
  *
  * @author Nacos
  */
@@ -51,66 +52,125 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExternalDataSourceServiceImpl.class);
     
     /**
-     * JDBC execute timeout value, unit:second.
+     * 默认的JDBC执行超时时间，3s
      */
     private int queryTimeout = 3;
-    
+
+    /**
+     * 默认的事务执行超时时间5s
+     */
     private static final int TRANSACTION_QUERY_TIMEOUT = 5;
-    
+
+    /**
+     * 默认主数据库可选的上限
+     */
     private static final int DB_MASTER_SELECT_THRESHOLD = 1;
     
     private static final String DB_LOAD_ERROR_MSG = "[db-load-error]load jdbc.properties error";
-    
+
+    /**
+     * 多数据源管理
+     */
     private List<HikariDataSource> dataSourceList = new ArrayList<>();
-    
+
+    /**
+     * Spring的SQL执行器
+     */
     private JdbcTemplate jt;
-    
+
+    /**
+     * Spring的事务管理器（数据源相关）
+     */
     private DataSourceTransactionManager tm;
-    
+
+    /**
+     * Spring的事务管理器（无需关注数据源，因为其底层是DataSourceTransactionManager）
+     */
     private TransactionTemplate tjt;
-    
+
+    /**
+     * 负责测试主数据库的SQL执行器
+     */
     private JdbcTemplate testMasterJT;
-    
+
+    /**
+     * 负责测试主数据库可写的SQL执行器
+     */
     private JdbcTemplate testMasterWritableJT;
-    
+
+    /**
+     * 保存出于测试目的的SQL执行器的列表
+     */
     private volatile List<JdbcTemplate> testJtList;
-    
+
+    /**
+     * 保存多数据源健康状态的列表
+     */
     private volatile List<Boolean> isHealthList;
-    
+
+    /**
+     * 主数据源索引，对应到{@link #dataSourceList}
+     */
     private volatile int masterIndex;
-    
+
+    /**
+     * 数据源类型
+     */
     private String dataSourceType = "";
-    
+
+    /**
+     * 默认的数据源类型
+     */
     private final String defaultDataSourceType = "";
     
     @Override
     public void init() {
+        /**
+         * 从 ENV("QUERYTIMEOUT") -> DEFAULT(3)中取值
+         */
         queryTimeout = ConvertUtils.toInt(System.getProperty("QUERYTIMEOUT"), 3);
+        /**
+         * 初始化SQL执行器
+         */
         jt = new JdbcTemplate();
         // Set the maximum number of records to prevent memory expansion
         jt.setMaxRows(50000);
         jt.setQueryTimeout(queryTimeout);
-        
+
+        /**
+         * 初始化用于测试主数据源的SQL执行器
+         */
         testMasterJT = new JdbcTemplate();
         testMasterJT.setQueryTimeout(queryTimeout);
-        
+
+        /**
+         * 初始化用于测试主数据源可写的SQL执行器
+         */
         testMasterWritableJT = new JdbcTemplate();
         // Prevent the login interface from being too long because the main library is not available
         testMasterWritableJT.setQueryTimeout(1);
         
         //  Database health check
-        
         testJtList = new ArrayList<>();
         isHealthList = new ArrayList<>();
-        
+
+        /**
+         * 初始化事务管理器
+         */
         tm = new DataSourceTransactionManager();
         tjt = new TransactionTemplate(tm);
         
         // Transaction timeout needs to be distinguished from ordinary operations.
         tjt.setTimeout(TRANSACTION_QUERY_TIMEOUT);
-        
+
+        /**
+         * 获取数据库平台
+         */
         dataSourceType = DatasourcePlatformUtil.getDatasourcePlatform(defaultDataSourceType);
-        
+
+        /**
+         * 如果配置了使用外部存储，则执行加载；否则跳过
+         */
         if (DatasourceConfiguration.isUseExternalDB()) {
             try {
                 reload();
@@ -118,7 +178,10 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
                 LOGGER.error("[ExternalDataSourceService] datasource reload error", e);
                 throw new RuntimeException(DB_LOAD_ERROR_MSG, e);
             }
-            
+
+            /**
+             *
+             */
             if (this.dataSourceList.size() > DB_MASTER_SELECT_THRESHOLD) {
                 PersistenceExecutor.scheduleTask(new SelectMasterTask(), 10, 10, TimeUnit.SECONDS);
             }

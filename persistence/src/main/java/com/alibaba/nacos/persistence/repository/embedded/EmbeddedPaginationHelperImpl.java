@@ -59,6 +59,9 @@ public class EmbeddedPaginationHelperImpl<E> implements PaginationHelper {
     @Override
     public Page<E> fetchPage(final String sqlCountRows, final String sqlFetchRows, Object[] args, final int pageNo,
             final int pageSize, final Long lastMaxId, final RowMapper rowMapper) {
+        /**
+         * 校验分页参数
+         */
         if (pageNo <= 0 || pageSize <= 0) {
             throw new IllegalArgumentException("pageNo and pageSize must be greater than zero");
         }

@@ -100,6 +100,9 @@ import static com.alibaba.nacos.config.server.utils.RequestUtil.getRemoteIp;
 /**
  * Special controller for soft load client to publish data.
  *
+ * 配置中心控制器，提供分页检索、发布配置、修改配置、删除配置的功能。
+ * 这些功能主要提供给Nacos Server控制台(软负载客户端)使用。
+ *
  * @author leiwen
  */
 @RestController
@@ -116,13 +119,22 @@ public class ConfigController {
     private static final String EXPORT_CONFIG_FILE_NAME_DATE_FORMAT = "yyyyMMddHHmmss";
     
     private final ConfigServletInner inner;
-    
+
+    /**
+     * 访问和ConfigInfo相关的存储信息
+     */
     private ConfigInfoPersistService configInfoPersistService;
-    
+
+    /**
+     * 访问和ConfigInfoBeta相关的存储信息
+     */
     private ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
+
+    /**
+     * 访问和TenantInfo相关的存储信息
+     */
     private NamespacePersistService namespacePersistService;
-    
+
     private final ConfigOperationService configOperationService;
     
     private final ConfigSubService configSubService;
@@ -146,6 +158,9 @@ public class ConfigController {
      * {@link com.alibaba.nacos.config.server.aspect.CapacityManagementAspect} and
      * {@link com.alibaba.nacos.config.server.aspect.RequestLogAspect}.
      * </p>
+     *
+     * 发布配置
+     *
      *
      * @throws NacosException NacosException.
      */
@@ -198,6 +213,9 @@ public class ConfigController {
         if (StringUtils.isBlank(srcUser)) {
             configForm.setSrcUser(RequestUtil.getSrcUserName(request));
         }
+        /**
+         * 如果未设置，或设置非法，则使用默认类型，TEXT
+         */
         if (!ConfigType.isValidType(type)) {
             configForm.setType(ConfigType.getDefaultType().getType());
         }
@@ -240,6 +258,8 @@ public class ConfigController {
     
     /**
      * Get the specific configuration information that the console USES.
+     *
+     * 获取单个配置的详情信息
      *
      * @throws NacosException NacosException.
      */
@@ -312,9 +332,7 @@ public class ConfigController {
             return RestResultUtils.success(true);
         }
         for (ConfigInfo configInfo : configInfoList) {
-            ConfigChangePublisher.notifyConfigChange(
-                    new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(),
-                            configInfo.getTenant(), time.getTime()));
+            ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant(), time.getTime()));
             
             ConfigTraceService.logPersistenceEvent(configInfo.getDataId(), configInfo.getGroup(),
                     configInfo.getTenant(), null, time.getTime(), clientIp, ConfigTraceService.PERSISTENCE_EVENT,
@@ -381,6 +399,8 @@ public class ConfigController {
     
     /**
      * Query the configuration information and return it in JSON format.
+     *
+     * 分页精确查询配置管理列表
      */
     @GetMapping(params = "search=accurate")
     @Secured(action = ActionTypes.READ, signType = SignType.CONFIG)
@@ -410,6 +430,8 @@ public class ConfigController {
     /**
      * Fuzzy query configuration information. Fuzzy queries based only on content are not allowed, that is, both dataId
      * and group are NULL, but content is not NULL. In this case, all configurations are returned.
+     *
+     * 分页模糊查询配置管理列表
      */
     @GetMapping(params = "search=blur")
     @Secured(action = ActionTypes.READ, signType = SignType.CONFIG)
@@ -460,8 +482,7 @@ public class ConfigController {
         }
         ConfigTraceService.logPersistenceEvent(dataId, group, tenant, requestIpApp, System.currentTimeMillis(),
                 remoteIp, ConfigTraceService.PERSISTENCE_EVENT_BETA, ConfigTraceService.PERSISTENCE_TYPE_REMOVE, null);
-        ConfigChangePublisher.notifyConfigChange(
-                new ConfigDataChangeEvent(true, dataId, group, tenant, System.currentTimeMillis()));
+        ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(true, dataId, group, tenant, System.currentTimeMillis()));
         
         return RestResultUtils.success("stop beta ok", true);
     }
@@ -660,9 +681,7 @@ public class ConfigController {
         Map<String, Object> saveResult = configInfoPersistService.batchInsertOrUpdate(configInfoList, srcUser, srcIp,
                 null, policy);
         for (ConfigInfo configInfo : configInfoList) {
-            ConfigChangePublisher.notifyConfigChange(
-                    new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(),
-                            configInfo.getTenant(), time.getTime()));
+            ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant(), time.getTime()));
             ConfigTraceService.logPersistenceEvent(configInfo.getDataId(), configInfo.getGroup(),
                     configInfo.getTenant(), requestIpApp, time.getTime(), InetUtils.getSelfIP(),
                     ConfigTraceService.PERSISTENCE_EVENT, ConfigTraceService.PERSISTENCE_TYPE_PUB,
@@ -912,9 +931,7 @@ public class ConfigController {
         Map<String, Object> saveResult = configInfoPersistService.batchInsertOrUpdate(configInfoList4Clone, srcUser,
                 srcIp, null, policy);
         for (ConfigInfo configInfo : configInfoList4Clone) {
-            ConfigChangePublisher.notifyConfigChange(
-                    new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(),
-                            configInfo.getTenant(), time.getTime()));
+            ConfigChangePublisher.notifyConfigChange(new ConfigDataChangeEvent(false, configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant(), time.getTime()));
             ConfigTraceService.logPersistenceEvent(configInfo.getDataId(), configInfo.getGroup(),
                     configInfo.getTenant(), requestIpApp, time.getTime(), InetUtils.getSelfIP(),
                     ConfigTraceService.PERSISTENCE_EVENT, ConfigTraceService.PERSISTENCE_TYPE_PUB,

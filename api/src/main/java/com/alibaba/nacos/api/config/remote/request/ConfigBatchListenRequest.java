@@ -24,16 +24,19 @@ import java.util.List;
  *
  * @author liuzunfei
  * @version $Id: ConfigBatchListenRequest.java, v 0.1 2020年07月27日 7:46 PM liuzunfei Exp $
+ * @see {@link com.alibaba.nacos.config.server.remote.ConfigChangeBatchListenRequestHandler}
+ * @see {@link com.alibaba.nacos.api.config.remote.request.ConfigBatchListenRequest.ConfigListenContext}
+ * @see {@link com.alibaba.nacos.client.config.impl.ClientWorker.ConfigRpcTransportClient}
  */
 public class ConfigBatchListenRequest extends AbstractConfigRequest {
-    
+
     /**
      * listen or remove listen.
      */
     private boolean listen = true;
-    
+
     private List<ConfigListenContext> configListenContexts = new ArrayList<>();
-    
+
     /**
      * add listen config.
      *
@@ -50,7 +53,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         configListenContext.tenant = tenant;
         configListenContexts.add(configListenContext);
     }
-    
+
     /**
      * Getter method for property <tt>configListenContexts</tt>.
      *
@@ -59,7 +62,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
     public List<ConfigListenContext> getConfigListenContexts() {
         return configListenContexts;
     }
-    
+
     /**
      * Setter method for property <tt>configListenContexts</tt>.
      *
@@ -68,7 +71,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
     public void setConfigListenContexts(List<ConfigListenContext> configListenContexts) {
         this.configListenContexts = configListenContexts;
     }
-    
+
     /**
      * Getter method for property <tt>listen</tt>.
      *
@@ -77,7 +80,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
     public boolean isListen() {
         return listen;
     }
-    
+
     /**
      * Setter method for property <tt>listen</tt>.
      *
@@ -86,27 +89,27 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
     public void setListen(boolean listen) {
         this.listen = listen;
     }
-    
+
     public static class ConfigListenContext {
-        
+
         String group;
-        
+
         String md5;
-        
+
         String dataId;
-        
+
         String tenant;
-        
+
         public ConfigListenContext() {
-        
+
         }
-        
+
         @Override
         public String toString() {
             return "ConfigListenContext{" + "group='" + group + '\'' + ", md5='" + md5 + '\'' + ", dataId='" + dataId
                     + '\'' + ", tenant='" + tenant + '\'' + '}';
         }
-        
+
         /**
          * Getter method for property <tt>group</tt>.
          *
@@ -115,7 +118,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public String getGroup() {
             return group;
         }
-        
+
         /**
          * Setter method for property <tt>groupId</tt>.
          *
@@ -124,7 +127,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public void setGroup(String group) {
             this.group = group;
         }
-        
+
         /**
          * Getter method for property <tt>md5</tt>.
          *
@@ -133,7 +136,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public String getMd5() {
             return md5;
         }
-        
+
         /**
          * Setter method for property <tt>md5</tt>.
          *
@@ -142,7 +145,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public void setMd5(String md5) {
             this.md5 = md5;
         }
-        
+
         /**
          * Getter method for property <tt>dataId</tt>.
          *
@@ -151,7 +154,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public String getDataId() {
             return dataId;
         }
-        
+
         /**
          * Setter method for property <tt>dataId</tt>.
          *
@@ -160,7 +163,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public void setDataId(String dataId) {
             this.dataId = dataId;
         }
-        
+
         /**
          * Getter method for property <tt>tenant</tt>.
          *
@@ -169,7 +172,7 @@ public class ConfigBatchListenRequest extends AbstractConfigRequest {
         public String getTenant() {
             return tenant;
         }
-        
+
         /**
          * Setter method for property <tt>tenant</tt>.
          *

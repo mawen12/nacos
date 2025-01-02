@@ -22,6 +22,9 @@ import java.util.Properties;
  * NacosClientProperties interface. include all the properties from jvm args, system environment, default setting. more
  * details you can see https://github.com/alibaba/nacos/issues/8622
  *
+ * Nacos 客户端配置
+ * 原型设计模式。
+ *
  * @author onewe
  */
 public interface NacosClientProperties {

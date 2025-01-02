@@ -21,6 +21,8 @@ import java.io.IOException;
 /**
  * config disk service.
  *
+ * p
+ *
  * @author zunfei.lzf
  */
 public interface ConfigDiskService {

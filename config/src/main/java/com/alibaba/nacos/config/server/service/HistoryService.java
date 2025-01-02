@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * HistoryService.
+ * 配置历史服务
  *
  * @author dongyafei
  * @date 2022/8/11
@@ -53,6 +53,9 @@ public class HistoryService {
      */
     public Page<ConfigHistoryInfo> listConfigHistory(String dataId, String group, String namespaceId, Integer pageNo,
             Integer pageSize) {
+        /**
+         * 检索特定dataId, group, tenant配置的历史记录列表
+         */
         return historyConfigInfoPersistService.findConfigHistory(dataId, group, namespaceId, pageNo, pageSize);
     }
     

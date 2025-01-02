@@ -27,7 +27,7 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 
 /**
- * Nacos starter.
+ * Nacos Server 启动器.
  * <p>
  * Use @SpringBootApplication and @ComponentScan at the same time, using CUSTOM type filter to control module enabled.
  * </p>
@@ -46,4 +46,3 @@ public class Nacos {
         SpringApplication.run(Nacos.class, args);
     }
 }
-

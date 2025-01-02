@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Config executor.
  *
+ * 配置中心的执行器
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public final class ConfigExecutor {

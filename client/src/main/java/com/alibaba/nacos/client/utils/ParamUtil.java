@@ -47,9 +47,15 @@ public class ParamUtil {
     private static String defaultNodesPath = "serverlist";
     
     private static String appKey;
-    
+
+    /**
+     * 应用用名称
+     */
     private static String appName;
-    
+
+    /**
+     * 默认的服务器端口
+     */
     private static final String DEFAULT_SERVER_PORT = "8848";
     
     private static String serverPort;
@@ -189,20 +195,36 @@ public class ParamUtil {
      */
     public static String parseNamespace(NacosClientProperties properties) {
         String namespaceTmp = null;
-        
+
+        /**
+         * 依次从变量 isUseCloudNamespaceParsing -> nacos.use.cloud.namespace.parsing -> 默认值(true) 中读取值
+         * 顺序为：PORPERTIES -> JVM -> DEFAULT
+         */
         String isUseCloudNamespaceParsing = properties.getProperty(PropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                 properties.getProperty(SystemPropertyKeyConst.IS_USE_CLOUD_NAMESPACE_PARSING,
                         String.valueOf(Constants.DEFAULT_USE_CLOUD_NAMESPACE_PARSING)));
-        
+
+        /**
+         * 若使用从阿里云
+         */
         if (Boolean.parseBoolean(isUseCloudNamespaceParsing)) {
+            /**
+             * 从ACM获取用户租户信息
+             */
             namespaceTmp = TenantUtil.getUserTenantForAcm();
-            
+
+            /**
+             * 当值为空字符串时，从ENV读取ALIBABA_ALIWARE_NAMESPACE，如果为空，则取空字符串
+             */
             namespaceTmp = TemplateUtils.stringBlankAndThenExecute(namespaceTmp, () -> {
                 String namespace = properties.getProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_NAMESPACE);
                 return StringUtils.isNotBlank(namespace) ? namespace : StringUtils.EMPTY;
             });
         }
-        
+
+        /**
+         * 如果命名空间为空，则从PROPERTIES中读取namespace
+         */
         if (StringUtils.isBlank(namespaceTmp)) {
             namespaceTmp = properties.getProperty(PropertyKeyConst.NAMESPACE);
         }

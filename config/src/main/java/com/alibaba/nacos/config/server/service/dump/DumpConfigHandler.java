@@ -50,17 +50,29 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
         if (event.isBeta()) {
             boolean result = false;
             if (event.isRemove()) {
+                /**
+                 * 删除Beta配置
+                 */
                 result = ConfigCacheService.removeBeta(dataId, group, namespaceId);
                 if (result) {
+                    /**
+                     * 删除成功后，记录操作
+                     */
                     ConfigTraceService.logDumpBetaEvent(dataId, group, namespaceId, null, lastModified,
                             event.getHandleIp(), ConfigTraceService.DUMP_TYPE_REMOVE_OK,
                             System.currentTimeMillis() - lastModified, 0);
                 }
                 return result;
             } else {
+                /**
+                 * 新增或修改Beta配置
+                 */
                 result = ConfigCacheService.dumpBeta(dataId, group, namespaceId, content, lastModified,
                         event.getBetaIps(), event.getEncryptedDataKey());
                 if (result) {
+                    /**
+                     * 操作成功，记录操作
+                     */
                     ConfigTraceService.logDumpBetaEvent(dataId, group, namespaceId, null, lastModified,
                             event.getHandleIp(), ConfigTraceService.DUMP_TYPE_OK,
                             System.currentTimeMillis() - lastModified, content.length());
@@ -72,19 +84,30 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
         
         //tag
         if (StringUtils.isNotBlank(event.getTag())) {
-            //
             boolean result;
             if (!event.isRemove()) {
+                /**
+                 * 新增或修改标签
+                 */
                 result = ConfigCacheService.dumpTag(dataId, group, namespaceId, event.getTag(), content, lastModified,
                         event.getEncryptedDataKey());
                 if (result) {
+                    /**
+                     * 操作成功，记录操作
+                     */
                     ConfigTraceService.logDumpTagEvent(dataId, group, namespaceId, event.getTag(), null, lastModified,
                             event.getHandleIp(), ConfigTraceService.DUMP_TYPE_OK,
                             System.currentTimeMillis() - lastModified, content.length());
                 }
             } else {
+                /**
+                 * 删除标签
+                 */
                 result = ConfigCacheService.removeTag(dataId, group, namespaceId, event.getTag());
                 if (result) {
+                    /**
+                     * 操作成功，记录操作
+                     */
                     ConfigTraceService.logDumpTagEvent(dataId, group, namespaceId, event.getTag(), null, lastModified,
                             event.getHandleIp(), ConfigTraceService.DUMP_TYPE_REMOVE_OK,
                             System.currentTimeMillis() - lastModified, 0);
@@ -108,17 +131,29 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
         
         boolean result;
         if (!event.isRemove()) {
+            /**
+             * 新增或更新配置
+             */
             result = ConfigCacheService.dump(dataId, group, namespaceId, content, lastModified, event.getType(),
                     event.getEncryptedDataKey());
             
             if (result) {
+                /**
+                 * 操作成功，记录
+                 */
                 ConfigTraceService.logDumpEvent(dataId, group, namespaceId, null, lastModified, event.getHandleIp(),
                         ConfigTraceService.DUMP_TYPE_OK, System.currentTimeMillis() - lastModified, content.length());
             }
         } else {
+            /**
+             * 移除配置
+             */
             result = ConfigCacheService.remove(dataId, group, namespaceId);
             
             if (result) {
+                /**
+                 * 操作成功，记录
+                 */
                 ConfigTraceService.logDumpEvent(dataId, group, namespaceId, null, lastModified, event.getHandleIp(),
                         ConfigTraceService.DUMP_TYPE_REMOVE_OK, System.currentTimeMillis() - lastModified, 0);
             }

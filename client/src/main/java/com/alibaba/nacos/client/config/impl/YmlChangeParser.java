@@ -33,14 +33,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * YmlChangeParser.
+ * 检测Yaml属性变更
  *
  * @author rushsky518
  */
 public class YmlChangeParser extends AbstractConfigChangeParser {
     
     private static final String INVALID_CONSTRUCTOR_ERROR_INFO = "could not determine a constructor for the tag";
-    
+
+    /**
+     * 支持类型为 yaml
+     */
     private static final String CONFIG_TYPE = "yaml";
     
     public YmlChangeParser() {
@@ -53,10 +56,16 @@ public class YmlChangeParser extends AbstractConfigChangeParser {
         Map<String, Object> newMap = Collections.emptyMap();
         try {
             Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
+            /**
+             * 使用Yaml将旧内容解析到Map中
+             */
             if (StringUtils.isNotBlank(oldContent)) {
                 oldMap = yaml.load(oldContent);
                 oldMap = getFlattenedMap(oldMap);
             }
+            /**
+             * 使用Yaml将旧内容解析到Map中
+             */
             if (StringUtils.isNotBlank(newContent)) {
                 newMap = yaml.load(newContent);
                 newMap = getFlattenedMap(newMap);

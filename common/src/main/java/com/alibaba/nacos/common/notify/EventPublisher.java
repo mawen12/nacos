@@ -22,6 +22,8 @@ import com.alibaba.nacos.common.notify.listener.Subscriber;
 /**
  * Event publisher.
  *
+ * 事件发布者
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
  */

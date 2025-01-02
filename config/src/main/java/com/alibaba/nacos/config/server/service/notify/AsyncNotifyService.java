@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Async notify service.
  *
+ * 异步通知服务
+ *
  * @author Nacos
  */
 @Service
@@ -80,9 +82,15 @@ public class AsyncNotifyService {
         this.memberManager = memberManager;
         
         // Register ConfigDataChangeEvent to NotifyCenter.
+        /**
+         * 将{@link ConfigDataChangeEvent}注册到{@link NotifyCenter#publisherMap}
+         */
         NotifyCenter.registerToPublisher(ConfigDataChangeEvent.class, NotifyCenter.ringBufferSize);
         
         // Register A Subscriber to subscribe ConfigDataChangeEvent.
+        /**
+         * 订阅{@link ConfigDataChangeEvent} 事件
+         */
         NotifyCenter.registerSubscriber(new Subscriber() {
             
             @Override
@@ -97,7 +105,11 @@ public class AsyncNotifyService {
             }
         });
     }
-    
+
+    /**
+     * {@link ConfigDataChangeEvent}事件处理逻辑
+     * @param event
+     */
     void handleConfigDataChangeEvent(Event event) {
         if (event instanceof ConfigDataChangeEvent) {
             ConfigDataChangeEvent evt = (ConfigDataChangeEvent) event;
@@ -106,18 +118,29 @@ public class AsyncNotifyService {
             String group = evt.group;
             String tenant = evt.tenant;
             String tag = evt.tag;
+            /**
+             * 增加该配置的变更记录统计数
+             */
             MetricsMonitor.incrementConfigChangeCount(tenant, group, dataId);
-            
+
+            /**
+             * 获取集群中除本身外的其他Nacos Server节点
+             */
             Collection<Member> ipList = memberManager.allMembersWithoutSelf();
             
             // In fact, any type of queue here can be
             Queue<NotifySingleRpcTask> rpcQueue = new LinkedList<>();
-            
+
+            /**
+             * 为每个Nacos Server节点构造一个RPC任务
+             */
             for (Member member : ipList) {
                 // grpc report data change only
-                rpcQueue.add(
-                        new NotifySingleRpcTask(dataId, group, tenant, tag, dumpTs, evt.isBeta, evt.isBatch, member));
+                rpcQueue.add(new NotifySingleRpcTask(dataId, group, tenant, tag, dumpTs, evt.isBeta, evt.isBatch, member));
             }
+            /**
+             * 使用执行器异步执行任务
+             */
             if (!rpcQueue.isEmpty()) {
                 ConfigExecutor.executeAsyncNotify(new AsyncRpcTask(rpcQueue));
             }
@@ -131,7 +154,9 @@ public class AsyncNotifyService {
     void executeAsyncRpcTask(Queue<NotifySingleRpcTask> queue) {
         while (!queue.isEmpty()) {
             NotifySingleRpcTask task = queue.poll();
-            
+            /**
+             * 构造配置变更同步请求
+             */
             ConfigChangeClusterSyncRequest syncRequest = new ConfigChangeClusterSyncRequest();
             syncRequest.setDataId(task.getDataId());
             syncRequest.setGroup(task.getGroup());
@@ -145,16 +170,24 @@ public class AsyncNotifyService {
             String event = getNotifyEvent(task);
             if (memberManager.hasMember(member.getAddress())) {
                 // start the health check and there are ips that are not monitored, put them directly in the notification queue, otherwise notify
+                /**
+                 * 获取目标节点的健康状态
+                 */
                 boolean unHealthNeedDelay = isUnHealthy(member.getAddress());
                 if (unHealthNeedDelay) {
                     // target ip is unhealthy, then put it in the notification list
+                    /**
+                     * 目标节点不健康，将通知事件放入到延迟队列
+                     */
                     ConfigTraceService.logNotifyEvent(task.getDataId(), task.getGroup(), task.getTenant(), null,
                             task.getLastModified(), InetUtils.getSelfIP(), event,
                             ConfigTraceService.NOTIFY_TYPE_UNHEALTH, 0, member.getAddress());
                     // get delay time and set fail count to the task
                     asyncTaskExecute(task);
                 } else {
-                    
+                    /**
+                     * 使用 grpc 通知变更
+                     */
                     // grpc report data change only
                     try {
                         configClusterRpcClientProxy.syncConfigChange(member, syncRequest,

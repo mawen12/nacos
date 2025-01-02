@@ -40,27 +40,52 @@ public abstract class AbstractConfigChangeParser implements ConfigChangeParser {
     public boolean isResponsibleFor(String type) {
         return this.configType.equalsIgnoreCase(type);
     }
-    
+
+    /**
+     * 找出新集合与旧集合不一致的内容
+     * <ul>
+     *     <li>新增</li>
+     *     <li>修改</li>
+     *     <li>删除</li>
+     * </ul>
+     *
+     * @param oldMap
+     * @param newMap
+     * @return
+     */
     protected Map<String, ConfigChangeItem> filterChangeData(Map oldMap, Map newMap) {
         Map<String, ConfigChangeItem> result = new HashMap<>(16);
         for (Map.Entry<String, Object> e : (Iterable<Map.Entry<String, Object>>) oldMap.entrySet()) {
             ConfigChangeItem cci;
             if (newMap.containsKey(e.getKey())) {
+                /**
+                 * 当现有键值都保持一致时，代表未发生变化
+                 */
                 if (e.getValue().equals(newMap.get(e.getKey()))) {
                     continue;
                 }
+                /**
+                 * 当不一致时，代表发生修改
+                 */
                 cci = new ConfigChangeItem(e.getKey(), e.getValue().toString(), newMap.get(e.getKey()).toString());
                 cci.setType(PropertyChangeType.MODIFIED);
             } else {
+                /**
+                 * 当新集合中不存在旧集合的内容，代表发生删除
+                 */
                 cci = new ConfigChangeItem(e.getKey(), e.getValue().toString(), null);
                 cci.setType(PropertyChangeType.DELETED);
             }
         
             result.put(e.getKey(), cci);
         }
-    
+
+
         for (Map.Entry<String, Object> e : (Iterable<Map.Entry<String, Object>>) newMap.entrySet()) {
             if (!oldMap.containsKey(e.getKey())) {
+                /**
+                 * 从新集合中找出旧集合不存在的，代表发生新增
+                 */
                 ConfigChangeItem cci = new ConfigChangeItem(e.getKey(), null, e.getValue().toString());
                 cci.setType(PropertyChangeType.ADDED);
                 result.put(e.getKey(), cci);

@@ -56,6 +56,8 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
 /**
  * Serverlist Manager.
  *
+ * 服务列表管理器
+ *
  * @author Nacos
  */
 public class ServerListManager implements Closeable {
@@ -85,7 +87,10 @@ public class ServerListManager implements Closeable {
     private final int initServerListRetryTimes = 5;
     
     final boolean isFixed;
-    
+
+    /**
+     * 多节点管理器启动标识，true标识已启动；反之表示未启动
+     */
     boolean isStarted;
     
     private String endpoint;
@@ -172,38 +177,83 @@ public class ServerListManager implements Closeable {
     }
     
     public ServerListManager(NacosClientProperties properties) throws NacosException {
+        /**
+         * 启动状态标志位
+         */
         this.isStarted = false;
+        /**
+         * 初始化参数信息
+         */
         initParam(properties);
+
         if (StringUtils.isNotEmpty(serverAddrsStr)) {
+            /**
+             * 如果提供了serverAddr，则从该值中解析
+             */
             this.isFixed = true;
             List<String> serverAddrs = new ArrayList<>();
             StringTokenizer serverAddrsTokens = new StringTokenizer(this.serverAddrsStr, ",;");
             while (serverAddrsTokens.hasMoreTokens()) {
                 String serverAddr = serverAddrsTokens.nextToken().trim();
                 if (serverAddr.startsWith(HTTP_PREFIX) || serverAddr.startsWith(HTTPS_PREFIX)) {
+                    /**
+                     * 传递的服务地址中包含了http或https协议，则直接使用
+                     */
                     serverAddrs.add(serverAddr);
                 } else {
+                    /**
+                     * 传递的服务地址中只有ip:port，则在前面追加https协议，支持ipv4和ipv6
+                     */
                     String[] serverAddrArr = InternetAddressUtil.splitIPPortStr(serverAddr);
+                    /**
+                     * 未设置端口时，采用默认的8848端口
+                     */
                     if (serverAddrArr.length == 1) {
                         serverAddrs.add(HTTP_PREFIX + serverAddrArr[0] + InternetAddressUtil.IP_PORT_SPLITER + ParamUtil
                                 .getDefaultServerPort());
                     } else {
+                        /**
+                         * 已设置端口，直接在前面设置http
+                         */
                         serverAddrs.add(HTTP_PREFIX + serverAddr);
                     }
                 }
             }
             this.serverUrls = serverAddrs;
+            /**
+             * 初始化服务名
+             */
             this.name = initServerName(properties);
         } else {
+            /**
+             * 未指定serverAddr时，就从endpoint中读取Nacos Server信息，如果endpoint也未设置，则报错
+             */
             if (StringUtils.isBlank(endpoint)) {
                 throw new NacosException(NacosException.CLIENT_INVALID_PARAM, "endpoint is blank");
             }
+            /**
+             * 解析标志位设置为失败
+             */
             this.isFixed = false;
+            /**
+             * 解析服务名称
+             * 解析操作为 从配置文件中读取serverName -> fixed+namespace+serverUrls | custom-endpoint-contextPath-serverListName-namespace
+             * 解析到{@link name}
+             */
             this.name = initServerName(properties);
+            /**
+             * 解析Nacos Server地址路径
+             * 解析到{@link addressServerUrl}
+             */
             initAddressServerUrl(properties);
         }
     }
-    
+
+    /**
+     * 初始化命名空间和租户
+     *
+     * @param properties
+     */
     private void initNameSpace(NacosClientProperties properties) {
         String namespace = properties.getProperty(PropertyKeyConst.NAMESPACE);
         if (StringUtils.isNotBlank(namespace)) {
@@ -211,11 +261,22 @@ public class ServerListManager implements Closeable {
             this.tenant = namespace;
         }
     }
-    
+
+    /**
+     * 初始化服务地址
+     *
+     * @param properties
+     */
     private void initServerAddr(NacosClientProperties properties) {
         this.serverAddrsStr = properties.getProperty(PropertyKeyConst.SERVER_ADDR);
     }
-    
+
+    /**
+     * 初始化服务名称
+     *
+     * @param properties
+     * @return
+     */
     private String initServerName(NacosClientProperties properties) {
         String serverName;
         //1.user define server name.
@@ -240,7 +301,12 @@ public class ServerListManager implements Closeable {
         serverName = serverName.replaceAll("\\:", "_");
         return serverName;
     }
-    
+
+    /**
+     * 初始化服务器的http地址
+     *
+     * @param properties
+     */
     private void initAddressServerUrl(NacosClientProperties properties) {
         if (isFixed) {
             return;
@@ -265,15 +331,41 @@ public class ServerListManager implements Closeable {
     }
     
     private void initParam(NacosClientProperties properties) {
+        /**
+         * 解析Nacos Server地址，解析到 {@link serverAddrsStr}
+         */
         initServerAddr(properties);
+        /**
+         * 解析Nacos Server命名空间，解析到 {@link namespace}和{@link tenant}
+         */
         initNameSpace(properties);
+        /**
+         * 解析Nacos Server端点，解析到{@link endpoint}
+         */
         initEndpoint(properties);
+        /**
+         * 解析Nacos Server端点端口，解析到{@link endpointPort}
+         */
         initEndpointPort(properties);
+        /**
+         * 解析Nacos Server端点端口上下文路径，解析到{@link endpointContextPath}
+         */
         initEndpointContextPath(properties);
+        /**
+         * 解析Nacos Server上下文路径，解析到{@link contentPath}
+         */
         initContextPath(properties);
+        /**
+         * 解析Nacos Server服务列表名称，解析到{@link serverListName}
+         */
         initServerListName(properties);
     }
-    
+
+    /**
+     * 初始化端点上下文路径
+     *
+     * @param properties
+     */
     private void initEndpointContextPath(NacosClientProperties properties) {
         String endpointContextPathTmp = TemplateUtils.stringEmptyAndThenExecute(
                 properties.getProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_ENDPOINT_CONTEXT_PATH),
@@ -282,7 +374,12 @@ public class ServerListManager implements Closeable {
             this.endpointContextPath = endpointContextPathTmp;
         }
     }
-    
+
+    /**
+     * 初始化端点接口
+     *
+     * @param properties
+     */
     private void initEndpointPort(NacosClientProperties properties) {
         String endpointPortTmp = TemplateUtils.stringEmptyAndThenExecute(
                 properties.getProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_ENDPOINT_PORT),
@@ -291,7 +388,12 @@ public class ServerListManager implements Closeable {
             this.endpointPort = Integer.parseInt(endpointPortTmp);
         }
     }
-    
+
+    /**
+     * 初始化服务器列表名称
+     *
+     * @param properties
+     */
     private void initServerListName(NacosClientProperties properties) {
         String serverListNameTmp = properties.getProperty(PropertyKeyConst.ENDPOINT_CLUSTER_NAME,
                 properties.getProperty(PropertyKeyConst.CLUSTER_NAME));
@@ -299,14 +401,24 @@ public class ServerListManager implements Closeable {
             this.serverListName = serverListNameTmp;
         }
     }
-    
+
+    /**
+     * 初始化下文件路径
+     *
+     * @param properties
+     */
     private void initContextPath(NacosClientProperties properties) {
         String contentPathTmp = properties.getProperty(PropertyKeyConst.CONTEXT_PATH);
         if (!StringUtils.isBlank(contentPathTmp)) {
             this.contentPath = contentPathTmp;
         }
     }
-    
+
+    /**
+     * 初始化端点
+     *
+     * @param properties
+     */
     private void initEndpoint(final NacosClientProperties properties) {
         String endpointTmp = properties.getProperty(PropertyKeyConst.ENDPOINT);
         // Whether to enable domain name resolution rules
@@ -329,32 +441,46 @@ public class ServerListManager implements Closeable {
      * @throws NacosException nacos exception
      */
     public synchronized void start() throws NacosException {
-        
+        /**
+         * 已经启动，或者直接设置了serverAddrStr，表示无需启动
+         */
         if (isStarted || isFixed) {
             return;
         }
-        
+        /**
+         * 构建基于地址路径，从目标服务端获取信息的任务
+         */
         GetServerListTask getServersTask = new GetServerListTask(addressServerUrl);
+        /**
+         * 最大重试5次，且未查询到结果
+         */
         for (int i = 0; i < initServerListRetryTimes && serverUrls.isEmpty(); ++i) {
             getServersTask.run();
             if (!serverUrls.isEmpty()) {
                 break;
             }
             try {
+                // 失败后等待 100 -> 200 -> 300 -> 400 -> 500 毫秒
                 this.wait((i + 1) * 100L);
             } catch (Exception e) {
                 LOGGER.warn("get serverlist fail,url: {}", addressServerUrl);
             }
         }
-        
+
+        /**
+         * 在重试5次后，仍未查询到结果，则抛出异常
+         */
         if (serverUrls.isEmpty()) {
             LOGGER.error("[init-serverlist] fail to get NACOS-server serverlist! env: {}, url: {}", name,
                     addressServerUrl);
             throw new NacosException(NacosException.SERVER_ERROR,
                     "fail to get NACOS-server serverlist! env:" + name + ", not connnect url:" + addressServerUrl);
         }
-        
+
         // executor schedules the timer task
+        /**
+         * 使用定时任务，在后台每隔30秒更新{@link serverUrls}
+         */
         this.executorService.scheduleWithFixedDelay(getServersTask, 0L, 30L, TimeUnit.SECONDS);
         isStarted = true;
     }
@@ -400,11 +526,17 @@ public class ServerListManager implements Closeable {
     }
     
     private void updateIfChanged(List<String> newList) {
+        /**
+         * 当任务执行完毕后，未获取到Nacos Server的集群节点信息，则不做任何处理
+         */
         if (null == newList || newList.isEmpty()) {
             LOGGER.warn("[update-serverlist] current serverlist from address server is empty!!!");
             return;
         }
-        
+
+        /**
+         * 对获取到的节点信息进行加工，如果未指定http或https协议，则进行补充，并添加到列表中。
+         */
         List<String> newServerAddrList = new ArrayList<>();
         for (String server : newList) {
             if (server.startsWith(HTTP_PREFIX) || server.startsWith(HTTPS_PREFIX)) {
@@ -417,14 +549,29 @@ public class ServerListManager implements Closeable {
         /*
          no change
          */
+        /**
+         * 如果列表内容相等，则不做任何处理
+         */
         if (newServerAddrList.equals(serverUrls)) {
             return;
         }
+        /**
+         * 更新 {@link serverUrls}
+         */
         serverUrls = new ArrayList<>(newServerAddrList);
+        /**
+         * 更新迭代器
+         */
         iterator = iterator();
+        /**
+         * 获取迭代器中的下一个节点地址
+         */
         currentServerAddr = iterator.next();
         
         // Using unified event processor, NotifyCenter
+        /**
+         * 发布服务列表变更事件
+         */
         NotifyCenter.publishEvent(new ServerListChangeEvent());
         LOGGER.info("[{}] [update-serverList] serverList updated to {}", name, serverUrls);
     }

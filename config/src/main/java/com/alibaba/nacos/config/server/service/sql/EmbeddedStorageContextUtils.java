@@ -46,6 +46,9 @@ public class EmbeddedStorageContextUtils {
      * @param time       Operating time
      */
     public static void onModifyConfigInfo(ConfigInfo configInfo, String srcIp, Timestamp time) {
+        /**
+         * 如果为集群模式，则将配置信息构造为事件并写入{@link EmbeddedStorageContextHolder#EXTEND_INFO_CONTEXT}，用于将配置信息同步给其他节点
+         */
         if (!EnvUtil.getStandaloneMode()) {
             ConfigDumpEvent event = ConfigDumpEvent.builder().remove(false).namespaceId(configInfo.getTenant())
                     .dataId(configInfo.getDataId()).group(configInfo.getGroup()).isBeta(false)

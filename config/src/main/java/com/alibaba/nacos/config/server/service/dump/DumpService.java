@@ -154,7 +154,10 @@ public abstract class DumpService {
         this.dumpAllTaskMgr.addProcessor(DumpAllTagTask.TASK_ID, dumpAllTagProcessor);
         
         DynamicDataSource.getInstance().getDataSource();
-        
+
+        /**
+         * 订阅{@link ConfigDataChangeEvent} 事件
+         */
         NotifyCenter.registerSubscriber(new Subscriber() {
             
             @Override
@@ -173,7 +176,10 @@ public abstract class DumpService {
         // Generate ConfigDataChangeEvent concurrently
         if (event instanceof ConfigDataChangeEvent) {
             ConfigDataChangeEvent evt = (ConfigDataChangeEvent) event;
-            
+
+            /**
+             * 生成Dump请求，将配置存储到本地
+             */
             DumpRequest dumpRequest = DumpRequest.create(evt.dataId, evt.group, evt.tenant, evt.lastModifiedTs,
                     NetUtils.localIP());
             dumpRequest.setBeta(evt.isBeta);

@@ -33,26 +33,29 @@ import static com.alibaba.nacos.client.utils.ParamUtil.simplyEnvNameIfOverLimit;
 /**
  * Encrypted data key (EncryptedDataKey) local snapshot, disaster recovery directory related.
  *
+ * 加密数据密钥，本地快照，容灾恢复目录相关
+ *
+ *
  * @author luyanbo(RobberPhex)
  */
 public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
-    
+
     private static final Logger LOGGER = LogUtils.logger(LocalEncryptedDataKeyProcessor.class);
-    
+
     private static final String FAILOVER_CHILD_1 = "encrypted-data-key";
-    
+
     private static final String FAILOVER_CHILD_2 = "failover";
-    
+
     private static final String FAILOVER_CHILD_3 = "failover-tenant";
-    
+
     private static final String SNAPSHOT_CHILD_1 = "encrypted-data-key";
-    
+
     private static final String SNAPSHOT_CHILD_2 = "snapshot";
-    
+
     private static final String SNAPSHOT_CHILD_3 = "snapshot-tenant";
-    
+
     private static final String SUFFIX = "_nacos";
-    
+
     /**
      * Obtain the EncryptedDataKey of the disaster recovery configuration. NULL means there is no local file or an
      * exception is thrown.
@@ -63,7 +66,7 @@ public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
         if (!file.exists() || !file.isFile()) {
             return null;
         }
-        
+
         try {
             return readFile(file);
         } catch (IOException ioe) {
@@ -71,13 +74,13 @@ public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
             return null;
         }
     }
-    
+
     /**
      * Get the EncryptedDataKey of the locally cached file. NULL means there is no local file or an exception is
      * thrown.
      */
     public static String getEncryptDataKeySnapshot(String envName, String dataId, String group, String tenant) {
-        
+
         if (!SnapShotSwitch.getIsSnapShot()) {
             return null;
         }
@@ -85,7 +88,7 @@ public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
         if (!file.exists() || !file.isFile()) {
             return null;
         }
-        
+
         try {
             return readFile(file);
         } catch (IOException ioe) {
@@ -93,15 +96,23 @@ public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
             return null;
         }
     }
-    
+
     /**
      * Save the snapshot of encryptDataKey. If the content is NULL, delete the snapshot.
+     *
+     * 保存加密数据密钥的快照，如果内容为空，删除快照
      */
     public static void saveEncryptDataKeySnapshot(String envName, String dataId, String group, String tenant,
             String encryptDataKey) {
+        /**
+         * 如果未启用快照，则直接返回
+         */
         if (!SnapShotSwitch.getIsSnapShot()) {
             return;
         }
+        /**
+         *
+         */
         File file = getEncryptDataKeySnapshotFile(envName, dataId, group, tenant);
         try {
             if (null == encryptDataKey) {
@@ -128,37 +139,55 @@ public class LocalEncryptedDataKeyProcessor extends LocalConfigInfoProcessor {
             LOGGER.error("[" + envName + "] save snapshot error, " + file, ioe);
         }
     }
-    
+
     private static File getEncryptDataKeyFailoverFile(String envName, String dataId, String group, String tenant) {
         envName = simplyEnvNameIfOverLimit(envName);
-        
+
         File tmp = new File(LOCAL_SNAPSHOT_PATH, envName + SUFFIX);
         tmp = new File(tmp, FAILOVER_CHILD_1);
-        
+
         if (StringUtils.isBlank(tenant)) {
             tmp = new File(tmp, FAILOVER_CHILD_2);
         } else {
             tmp = new File(tmp, FAILOVER_CHILD_3);
             tmp = new File(tmp, tenant);
         }
-        
+
         return new File(new File(tmp, group), dataId);
     }
-    
+
     private static File getEncryptDataKeySnapshotFile(String envName, String dataId, String group, String tenant) {
+        /**
+         * 如果服务名称太长，则截取最大长度拼接原先的md5的16进制
+         */
         envName = simplyEnvNameIfOverLimit(envName);
-        
+
+        /**
+         * 定位特定服务的配置目录，即 LOCAL_SNAPSHOT_PATH/${serverName}_nacos
+         */
         File tmp = new File(LOCAL_SNAPSHOT_PATH, envName + SUFFIX);
+        /**
+         * 定位特定快照的配置目录，即 LOCAL_SNAPSHOT_PATH/${serverName}_nacos/encrypted-data-key
+         */
         tmp = new File(tmp, SNAPSHOT_CHILD_1);
-        
+
         if (StringUtils.isBlank(tenant)) {
+            /**
+             * 当存在特定租户时，定位目录为：LOCAL_SNAPSHOT_PATH/${serverName}_nacos/encrypted-data-key/snapshot
+             */
             tmp = new File(tmp, SNAPSHOT_CHILD_2);
         } else {
+            /**
+             * 当存在租户时，定位目录为：LOCAL_SNAPSHOT_PATH/${serverName}_nacos/data/config-data-tenant/snapshot-tenant
+             */
             tmp = new File(tmp, SNAPSHOT_CHILD_3);
+            /**
+             * 切换到指定租户下 LOCAL_SNAPSHOT_PATH/${serverName}_nacos/data/config-data-tenant/snapshot-tenant/${tenant}
+             */
             tmp = new File(tmp, tenant);
         }
-        
+
         return new File(new File(tmp, group), dataId);
     }
-    
+
 }

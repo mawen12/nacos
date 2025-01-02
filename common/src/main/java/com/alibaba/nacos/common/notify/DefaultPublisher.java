@@ -51,7 +51,10 @@ public class DefaultPublisher extends Thread implements EventPublisher {
     protected final ConcurrentHashSet<Subscriber> subscribers = new ConcurrentHashSet<>();
     
     private int queueMaxSize = -1;
-    
+
+    /**
+     * 阻塞队列
+     */
     private BlockingQueue<Event> queue;
     
     protected volatile Long lastEventSequence = -1L;
@@ -107,6 +110,9 @@ public class DefaultPublisher extends Thread implements EventPublisher {
                 waitTimes--;
             }
 
+            /**
+             * 持续从队列中读取消息并消费
+             */
             while (!shutdown) {
                 final Event event = queue.take();
                 receiveEvent(event);
@@ -133,8 +139,17 @@ public class DefaultPublisher extends Thread implements EventPublisher {
     
     @Override
     public boolean publish(Event event) {
+        /**
+         * 如果尚未初始化，则抛出异常
+         */
         checkIsStart();
+        /**
+         * 将事件加入到队列
+         */
         boolean success = this.queue.offer(event);
+        /**
+         * 加入失败，则使用当前线程直接消费
+         */
         if (!success) {
             LOGGER.warn("Unable to plug in due to interruption, synchronize sending time, event : {}", event);
             receiveEvent(event);
@@ -166,7 +181,10 @@ public class DefaultPublisher extends Thread implements EventPublisher {
      */
     void receiveEvent(Event event) {
         final long currentEventSequence = event.sequence();
-        
+
+        /**
+         * 如果事件没有监听器，则直接返回
+         */
         if (!hasSubscriber()) {
             LOGGER.warn("[NotifyCenter] the {} is lost, because there is no subscriber.", event);
             return;
@@ -174,11 +192,17 @@ public class DefaultPublisher extends Thread implements EventPublisher {
         
         // Notification single event listener
         for (Subscriber subscriber : subscribers) {
+            /**
+             * 判断订阅者是否匹配事件，如果不匹配则换下一个订阅者
+             */
             if (!subscriber.scopeMatches(event)) {
                 continue;
             }
             
             // Whether to ignore expiration events
+            /**
+             * 当事件过期并且订阅者忽略过期事件，则换下一个订阅者
+             */
             if (subscriber.ignoreExpireEvent() && lastEventSequence > currentEventSequence) {
                 LOGGER.debug("[NotifyCenter] the {} is unacceptable to this subscriber, because had expire",
                         event.getClass());
@@ -195,10 +219,16 @@ public class DefaultPublisher extends Thread implements EventPublisher {
     public void notifySubscriber(final Subscriber subscriber, final Event event) {
         
         LOGGER.debug("[NotifyCenter] the {} will received by {}", event, subscriber);
-        
+
         final Runnable job = () -> subscriber.onEvent(event);
+        /**
+         * 获取订阅者自己的执行器
+         */
         final Executor executor = subscriber.executor();
-        
+
+        /**
+         * 如果订阅者存在，则使用订阅者处理事件，反之使用当前线程处理。
+         */
         if (executor != null) {
             executor.execute(job);
         } else {

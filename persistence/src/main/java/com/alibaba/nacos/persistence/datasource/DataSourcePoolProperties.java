@@ -24,28 +24,44 @@ import org.springframework.core.env.Environment;
 import java.util.concurrent.TimeUnit;
 
 /**
- * DataSource pool properties.
- *
- * <p>Nacos server use HikariCP as the datasource pool. So the basic pool properties will based on {@link
- * com.zaxxer.hikari.HikariDataSource}.
+ * 数据源连接池配置
+ * Nacos Server使用HikariCP作为数据库连接池，因此内部返回数据源为{@link com.zaxxer.hikari.HikariDataSource}
  *
  * @author xiweng.yy
  */
 public class DataSourcePoolProperties {
-    
+
+    /**
+     * 默认连接超时时间3s
+     */
     public static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(3L);
-    
+
+    /**
+     * 默认校验超时时间10s
+     */
     public static final long DEFAULT_VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(10L);
 
+    /**
+     * 连接默认超时时间10s
+     */
     public static final long DEFAULT_IDLE_TIMEOUT = TimeUnit.MINUTES.toMillis(10L);
-    
+
+    /**
+     * 默认连接池中最大的连接数
+     */
     public static final int DEFAULT_MAX_POOL_SIZE = 20;
-    
+
+    /**
+     * 默认连接池中最小的连接数
+     */
     public static final int DEFAULT_MINIMUM_IDLE = 2;
-    
+
     private final HikariDataSource dataSource;
-    
+
     private DataSourcePoolProperties() {
+        /**
+         * 初始化数据源
+         */
         dataSource = new HikariDataSource();
         dataSource.setIdleTimeout(DEFAULT_IDLE_TIMEOUT);
         dataSource.setConnectionTimeout(DEFAULT_CONNECTION_TIMEOUT);
@@ -53,7 +69,7 @@ public class DataSourcePoolProperties {
         dataSource.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);
         dataSource.setMinimumIdle(DEFAULT_MINIMUM_IDLE);
     }
-    
+
     /**
      * Build new Hikari config.
      *
@@ -61,26 +77,27 @@ public class DataSourcePoolProperties {
      */
     public static DataSourcePoolProperties build(Environment environment) {
         DataSourcePoolProperties result = new DataSourcePoolProperties();
+        // what to do?
         Binder.get(environment).bind("db.pool.config", Bindable.ofInstance(result.getDataSource()));
         return result;
     }
-    
+
     public void setDriverClassName(final String driverClassName) {
         dataSource.setDriverClassName(driverClassName);
     }
-    
+
     public void setJdbcUrl(final String jdbcUrl) {
         dataSource.setJdbcUrl(jdbcUrl);
     }
-    
+
     public void setUsername(final String username) {
         dataSource.setUsername(username);
     }
-    
+
     public void setPassword(final String password) {
         dataSource.setPassword(password);
     }
-    
+
     public HikariDataSource getDataSource() {
         return dataSource;
     }

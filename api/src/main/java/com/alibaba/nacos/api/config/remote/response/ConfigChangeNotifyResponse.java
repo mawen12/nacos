@@ -16,10 +16,15 @@
 
 package com.alibaba.nacos.api.config.remote.response;
 
+import com.alibaba.nacos.api.config.remote.request.ConfigChangeNotifyRequest;
 import com.alibaba.nacos.api.remote.response.Response;
 
 /**
- * config change notify response from client.
+ * 配置变更通知响应
+ *
+ * @see {@link com.alibaba.nacos.api.config.remote.request.ConfigChangeNotifyRequest}
+ * @see {@link com.alibaba.nacos.client.config.impl.ClientWorker.ConfigRpcTransportClient#handleConfigChangeNotifyRequest(ConfigChangeNotifyRequest, String)}
+ *
  * @author liuzunfei
  * @version $Id: ConfigChangeNotifyResponse.java, v 0.1 2020年09月01日 2:59 PM liuzunfei Exp $
  */

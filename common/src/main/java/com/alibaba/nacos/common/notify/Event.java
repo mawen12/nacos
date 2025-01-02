@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * An abstract class for event.
  *
+ * 代表事件的抽象类
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
  */
@@ -29,13 +31,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class Event implements Serializable {
     
     private static final long serialVersionUID = -3731383194964997493L;
-    
+
+    /**
+     * 原子变量，序列号
+     */
     private static final AtomicLong SEQUENCE = new AtomicLong(0);
     
     private final long sequence = SEQUENCE.getAndIncrement();
     
     /**
      * Event sequence number, which can be used to handle the sequence of events.
+     *
+     * 事件序列号，用于处理事件的顺序
      *
      * @return sequence num, It's best to make sure it's monotone.
      */
@@ -46,6 +53,8 @@ public abstract class Event implements Serializable {
     /**
      * Event scope.
      *
+     * 事件范围
+     *
      * @return event scope, return null if for all scope
      */
     public String scope() {
@@ -55,6 +64,8 @@ public abstract class Event implements Serializable {
     /**
      * Whether is plugin event. If so, the event can be dropped when no publish and subscriber without any hint. Default
      * false
+     *
+     * 是否为插件事件，如果是，当没有任何发布和订阅者且没有任何提示时，事件可以丢弃
      *
      * @return {@code true} if is plugin event, otherwise {@code false}
      */

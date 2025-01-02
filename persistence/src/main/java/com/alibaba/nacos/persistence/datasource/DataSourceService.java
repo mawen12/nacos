@@ -22,7 +22,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Datasource interface.
+ * 数据源服务接口
  *
  * @author Nacos
  */
@@ -50,35 +50,35 @@ public interface DataSourceService {
     boolean checkMasterWritable();
     
     /**
-     * Get jdbc template.
+     * 获取{@link JdbcTemplate}
      *
      * @return JdbcTemplate.
      */
     JdbcTemplate getJdbcTemplate();
     
     /**
-     * Get transaction template.
+     * 获取{@link TransactionTemplate}
      *
      * @return TransactionTemplate.
      */
     TransactionTemplate getTransactionTemplate();
     
     /**
-     * Get current db url.
+     * 获取当前数据库url
      *
      * @return database url
      */
     String getCurrentDbUrl();
     
     /**
-     * Get heath information.
+     * 获取健康状态
      *
      * @return heath info.
      */
     String getHealth();
     
     /**
-     * Get current db type.
+     * 获取当前数据库类型
      *
      * @return
      */

@@ -24,6 +24,8 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 /**
  * ConfigChangePublisher.
  *
+ * 配置变更发布器，在新增配置、修改配置、删除配置时触发
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ConfigChangePublisher {
@@ -34,6 +36,9 @@ public class ConfigChangePublisher {
      * @param event ConfigDataChangeEvent instance.
      */
     public static void notifyConfigChange(ConfigDataChangeEvent event) {
+        /**
+         * 如果是单机模式，则直接返回；反之发送事件
+         */
         if (DatasourceConfiguration.isEmbeddedStorage() && !EnvUtil.getStandaloneMode()) {
             return;
         }

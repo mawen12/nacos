@@ -25,22 +25,29 @@ import com.alibaba.nacos.config.server.model.event.ConfigDumpEvent;
  * @author Nacos
  */
 public class Constants {
-    
+    /**
+     * 客户端版本头信息，在进行rpc请求时，会携带此信息，用于解决不同版本的兼容性
+     */
     public static final String CLIENT_VERSION_HEADER = "Client-Version";
     
     public static final String CLIENT_VERSION = "3.0.0";
-    
+
+    /**
+     * 配置默认使用的分组名称，当分组名称未指定时，便会使用该值
+     */
     public static final String DEFAULT_GROUP = "DEFAULT_GROUP";
     
     public static final String DATASOURCE_PLATFORM_PROPERTY_STATE = "datasource_platform";
     
     /**
-     * Config file directory in server side.
+     * 服务侧的配置文件目录名。
+     * 默认路径组成为：${user.home}/nacos/BASE_DIR
      */
     public static final String BASE_DIR = "config-data";
     
     /**
-     * Back up file directory in server side.
+     * 服务侧的备份文件目录路径
+     * 默认路径为为：${user.home}/nacos/bak_data
      */
     public static final String CONFIG_BAK_DIR = System.getProperty("user.home", "/home/admin") + "/nacos/bak_data";
     

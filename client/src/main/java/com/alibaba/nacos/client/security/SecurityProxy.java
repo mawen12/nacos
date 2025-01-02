@@ -32,6 +32,8 @@ import java.util.Properties;
 /**
  * Security proxy to update security information.
  *
+ * 用于更新安全信息的安全代理
+ *
  * @author nkorange
  * @since 1.2.0
  */
@@ -47,7 +49,13 @@ public class SecurityProxy implements Closeable {
      * @Param nacosRestTemplate http request template.
      */
     public SecurityProxy(List<String> serverList, NacosRestTemplate nacosRestTemplate) {
+        /**
+         * 构造客户端授权插件管理器
+         */
         clientAuthPluginManager = new ClientAuthPluginManager();
+        /**
+         *
+         */
         clientAuthPluginManager.init(serverList, nacosRestTemplate);
     }
     

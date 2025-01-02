@@ -19,6 +19,8 @@ package com.alibaba.nacos.config.server.service.dump.disk;
 /**
  * config disk serve factory.
  *
+ * 单例设计模式
+ *
  * @author zunfei.lzf
  */
 public class ConfigDiskServiceFactory {
@@ -35,13 +37,22 @@ public class ConfigDiskServiceFactory {
      * @return
      */
     public static ConfigDiskService getInstance() {
+        /**
+         * 双重判空
+         */
         if (configDiskService == null) {
             synchronized (ConfigDiskServiceFactory.class) {
                 if (configDiskService == null) {
                     String type = System.getProperty("config_disk_type", TYPE_RAW_DISK);
                     if (type.equalsIgnoreCase(TYPE_ROCKSDB)) {
+                        /**
+                         * 写入到RocksDB数据库中
+                         */
                         configDiskService = new ConfigRocksDbDiskService();
                     } else {
+                        /**
+                         * 写入到原始磁盘中
+                         */
                         configDiskService = new ConfigRawDiskService();
                     }
                 }

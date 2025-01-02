@@ -20,6 +20,10 @@ import java.util.List;
 
 /**
  * server list factory . use to inner client to connecte and switch servers.
+ *
+ * 简单工厂设计模式。
+ * 服务节点列表工厂。
+ *
  * @author liuzunfei
  * @version $Id: ServerListFactory.java, v 0.1 2020年07月14日 1:11 PM liuzunfei Exp $
  */

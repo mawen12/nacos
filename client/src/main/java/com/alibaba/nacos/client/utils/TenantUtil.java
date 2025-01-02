@@ -23,10 +23,15 @@ import com.alibaba.nacos.common.utils.StringUtils;
 /**
  * Tenant Util.
  *
+ * 租户工具类
+ *
  * @author Nacos
  */
 public class TenantUtil {
-    
+
+    /**
+     * 从环境变量中读取租户信息，如果未设置，则取空字符串。
+     */
     private static final String USER_TENANT;
     
     private static final String DEFAULT_ACM_NAMESPACE = "";
@@ -45,6 +50,8 @@ public class TenantUtil {
      * Note the difference between getting and getting ANS. Since the processing logic on the server side is different,
      * the default value returns differently.
      * </p>
+     *
+     * 适配云上ACM获取租户
      *
      * @return user tenant for acm
      */

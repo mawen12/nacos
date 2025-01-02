@@ -45,6 +45,8 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 /**
  * config http Manager.
  *
+ * 配置Http客户端管理器
+ *
  * @author mai.jh
  */
 public class ConfigHttpClientManager implements Closeable {

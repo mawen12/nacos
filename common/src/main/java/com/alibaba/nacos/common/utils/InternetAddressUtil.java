@@ -127,6 +127,9 @@ public class InternetAddressUtil {
             throw new IllegalArgumentException("ip and port string cannot be empty!");
         }
         String[] serverAddrArr;
+        /**
+         * 如果满足ipv6（[xxx]）格式，则将其按照ipv6来解析；否则使用ip:port来解析
+         */
         if (str.startsWith(IPV6_START_MARK) && StringUtils.containsIgnoreCase(str, IPV6_END_MARK)) {
             if (str.endsWith(IPV6_END_MARK)) {
                 serverAddrArr = new String[1];

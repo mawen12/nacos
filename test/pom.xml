@@ -29,6 +29,7 @@
     <packaging>pom</packaging>
 
     <name>nacos-test ${project.version}</name>
+    <description>Nacos 测试模块</description>
     <url>https://nacos.io</url>
     <modules>
         <module>config-test</module>

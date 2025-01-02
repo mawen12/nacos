@@ -31,6 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * RpcClientFactory.to support multi client for different modules of usage.
  *
+ * 工厂设计模式。
+ * RPC客户端工厂
+ *
  * @author liuzunfei
  * @version $Id: RpcClientFactory.java, v 0.1 2020年07月14日 3:41 PM liuzunfei Exp $
  */
@@ -109,7 +112,9 @@ public class RpcClientFactory {
      */
     public static RpcClient createClient(String clientName, ConnectionType connectionType, Integer threadPoolCoreSize,
             Integer threadPoolMaxSize, Map<String, String> labels, RpcClientTlsConfig tlsConfig) {
-        
+        /**
+         * 仅支持GRPC连接，非GRPC抛出异常
+         */
         if (!ConnectionType.GRPC.equals(connectionType)) {
             throw new UnsupportedOperationException("unsupported connection type :" + connectionType.getType());
         }

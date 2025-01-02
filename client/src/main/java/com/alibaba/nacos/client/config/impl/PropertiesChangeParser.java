@@ -25,12 +25,15 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * PropertiesChangeParser.
+ * 检测Properties属性变更
  *
  * @author rushsky518
  */
 public class PropertiesChangeParser extends AbstractConfigChangeParser {
-    
+
+    /**
+     * 支持类型为 properties
+     */
     private static final String CONFIG_TYPE = "properties";
     
     public PropertiesChangeParser() {
@@ -41,10 +44,16 @@ public class PropertiesChangeParser extends AbstractConfigChangeParser {
     public Map<String, ConfigChangeItem> doParse(String oldContent, String newContent, String type) throws IOException {
         Properties oldProps = new Properties();
         Properties newProps = new Properties();
-        
+
+        /**
+         * 将旧内容转换为Properties
+         */
         if (StringUtils.isNotBlank(oldContent)) {
             oldProps.load(new StringReader(oldContent));
         }
+        /**
+         * 将新内容转换为Properties
+         */
         if (StringUtils.isNotBlank(newContent)) {
             newProps.load(new StringReader(newContent));
         }

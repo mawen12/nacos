@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * config change listen context.
+ * 用于记录配置变更监听的上下文
  *
  * @author liuzunfei
  * @version $Id: ConfigChangeListenContext.java, v 0.1 2020年07月20日 1:37 PM liuzunfei Exp $
@@ -47,7 +47,7 @@ public class ConfigChangeListenContext {
     private ConcurrentHashMap<String, HashMap<String, String>> connectionIdContext = new ConcurrentHashMap<>();
     
     /**
-     * add listen.
+     * 增加监听器
      *
      * @param groupKey     groupKey.
      * @param connectionId connectionId.
@@ -60,7 +60,7 @@ public class ConfigChangeListenContext {
     }
     
     /**
-     * remove listen context for connection id .
+     * 移除分组key和连接id
      *
      * @param groupKey     groupKey.
      * @param connectionId connection id.
@@ -154,7 +154,7 @@ public class ConfigChangeListenContext {
     }
     
     /**
-     * get md5.
+     * 获取指定连接和分组Key的md5
      *
      * @param connectionId connection id.
      * @return md5 of the listen group key.
@@ -165,7 +165,7 @@ public class ConfigChangeListenContext {
     }
     
     /**
-     * get connection count.
+     * 获取连接总数
      *
      * @return count of long connections.
      */

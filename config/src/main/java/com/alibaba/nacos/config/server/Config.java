@@ -21,7 +21,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Config main.
+ * 配置中心主类，仅扫描core和config模块
  *
  * @author Nacos
  */

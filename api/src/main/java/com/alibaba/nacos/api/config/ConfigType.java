@@ -24,6 +24,8 @@ import java.util.Map;
 /**
  * Config data type.
  *
+ * 配置类型，默认类型为TEXT
+ *
  * @author liaochuntao
  **/
 public enum ConfigType {

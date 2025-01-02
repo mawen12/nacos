@@ -29,14 +29,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 /**
- * Derby database operation.
+ * 数据查询操作接口
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public interface DatabaseOperate {
     
     /**
-     * Data query transaction.
+     * 根据SQL查询一条记录
      *
      * @param sql sqk text
      * @param cls target type
@@ -46,7 +46,7 @@ public interface DatabaseOperate {
     <R> R queryOne(String sql, Class<R> cls);
     
     /**
-     * Data query transaction.
+     * 根据SQL和参数查询一条记录
      *
      * @param sql  sqk text
      * @param args sql parameters
@@ -57,7 +57,7 @@ public interface DatabaseOperate {
     <R> R queryOne(String sql, Object[] args, Class<R> cls);
     
     /**
-     * Data query transaction.
+     * 使用SQL和参数查询一条记录
      *
      * @param sql    sqk text
      * @param args   sql parameters
@@ -68,7 +68,7 @@ public interface DatabaseOperate {
     <R> R queryOne(String sql, Object[] args, RowMapper<R> mapper);
     
     /**
-     * Data query transaction.
+     * 使用SQL和参数查询多条记录
      *
      * @param sql    sqk text
      * @param args   sql parameters
@@ -79,7 +79,7 @@ public interface DatabaseOperate {
     <R> List<R> queryMany(String sql, Object[] args, RowMapper<R> mapper);
     
     /**
-     * Data query transaction.
+     * 使用SQL和参数查询多条记录
      *
      * @param sql    sqk text
      * @param args   sql parameters
@@ -90,7 +90,7 @@ public interface DatabaseOperate {
     <R> List<R> queryMany(String sql, Object[] args, Class<R> rClass);
     
     /**
-     * Data query transaction.
+     * 使用SQL和参数查询多条记录
      *
      * @param sql  sqk text
      * @param args sql parameters
@@ -99,7 +99,7 @@ public interface DatabaseOperate {
     List<Map<String, Object>> queryMany(String sql, Object[] args);
     
     /**
-     * data modify transaction.
+     * 数据更新操作
      *
      * @param modifyRequests {@link List}
      * @param consumer       {@link BiConsumer}
@@ -108,7 +108,7 @@ public interface DatabaseOperate {
     Boolean update(List<ModifyRequest> modifyRequests, BiConsumer<Boolean, Throwable> consumer);
     
     /**
-     * data modify transaction.
+     * 数据更新操作
      *
      * @param modifyRequests {@link List}
      * @return is success
@@ -118,8 +118,7 @@ public interface DatabaseOperate {
     }
     
     /**
-     * data importing, This method is suitable for importing data from external data sources into embedded data
-     * sources.
+     * 数据导入，用于从外部数据源导入到内置数据库中
      *
      * @param file {@link File}
      * @return {@link CompletableFuture}
@@ -127,8 +126,7 @@ public interface DatabaseOperate {
     CompletableFuture<RestResult<String>> dataImport(File file);
     
     /**
-     * data modify transaction The SqlContext to be executed in the current thread will be executed and automatically
-     * cleared.
+     * 从{@link EmbeddedStorageContextHolder#SQL_CONTEXT}中获取要执行的SQL，并在执行后清除
      *
      * @return is success
      */
@@ -137,8 +135,8 @@ public interface DatabaseOperate {
     }
     
     /**
-     * data modify transaction The SqlContext to be executed in the current thread will be executed and automatically
-     * cleared.
+     * 从{@link EmbeddedStorageContextHolder#SQL_CONTEXT}获取要执行的SQL，并在执行后清除
+     *
      * @author klw(213539@qq.com)
      * 2020/8/24 18:16
      * @param consumer the consumer
@@ -146,8 +144,14 @@ public interface DatabaseOperate {
      */
     default Boolean blockUpdate(BiConsumer<Boolean, Throwable> consumer) {
         try {
+            /**
+             * 从线程本地变量读取要执行的{@link ModifyRequest}
+             */
             return update(EmbeddedStorageContextHolder.getCurrentSqlContext(), consumer);
         } finally {
+            /**
+             * 清楚本地的SQL
+             */
             EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
@@ -155,6 +159,7 @@ public interface DatabaseOperate {
     /**
      * data modify transaction The SqlContext to be executed in the current thread will be executed and automatically
      * cleared.
+     *
      *
      * @return is success
      */

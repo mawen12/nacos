@@ -30,16 +30,28 @@ import java.util.ServiceLoader;
 /**
  * Config Filter Chain Management.
  *
+ * 责任链设计模式。
+ * 配置过滤器链管理器
+ *
  * @author Nacos
  */
 public class ConfigFilterChainManager implements IConfigFilterChain {
-    
+
+    /**
+     * 过滤器链
+     */
     private final List<IConfigFilter> filters = new ArrayList<>();
 
+    /**
+     * 启动参数
+     */
     private final Properties initProperty;
     
     public ConfigFilterChainManager(Properties properties) {
         this.initProperty = properties;
+        /**
+         * 加载配置过滤器，并将其添加到{@link filters}
+         */
         ServiceLoader<IConfigFilter> configFilters = ServiceLoader.load(IConfigFilter.class);
         for (IConfigFilter configFilter : configFilters) {
             addFilter(configFilter);
@@ -53,15 +65,23 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
      * @return this
      */
     public synchronized ConfigFilterChainManager addFilter(IConfigFilter filter) {
-        // init
+        /**
+         * 配置过滤器初始化
+         */
         filter.init(this.initProperty);
         // ordered by order value
         int i = 0;
         while (i < this.filters.size()) {
             IConfigFilter currentValue = this.filters.get(i);
+            /**
+             * 如果要添加的配置过滤器已经加入了，则跳过
+             */
             if (currentValue.getFilterName().equals(filter.getFilterName())) {
                 break;
             }
+            /**
+             * 比较过滤器优先级，如果高于当前优先级，则往后迭代；反之加入到集合中，并结束处理
+             */
             if (filter.getOrder() >= currentValue.getOrder() && i < this.filters.size()) {
                 i++;
             } else {
@@ -69,7 +89,10 @@ public class ConfigFilterChainManager implements IConfigFilterChain {
                 break;
             }
         }
-        
+
+        /**
+         * 要添加的过滤器比列表中所有的过滤器等级要高，或者当前列表中为空
+         */
         if (i == this.filters.size()) {
             this.filters.add(i, filter);
         }
