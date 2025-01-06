@@ -37,7 +37,7 @@ import java.util.Properties;
 public class NacosFactory {
     
     /**
-     * Create config service.
+     * 创建配置服务
      *
      * @param properties init param
      * @return config
@@ -48,7 +48,7 @@ public class NacosFactory {
     }
     
     /**
-     * Create config service.
+     * 创建配置服务
      *
      * @param serverAddr server list
      * @return config
@@ -59,7 +59,7 @@ public class NacosFactory {
     }
     
     /**
-     * Create naming service.
+     * 创建命名服务
      *
      * @param serverAddr server list
      * @return Naming
@@ -70,7 +70,7 @@ public class NacosFactory {
     }
     
     /**
-     * Create naming service.
+     * 创建命名服务
      *
      * @param properties init param
      * @return Naming

@@ -17,20 +17,34 @@
 package com.alibaba.nacos.common.trace.event.naming;
 
 /**
- * Naming register instance trace event.
+ * 注册中心注册实例追踪事件
+ *
+ * @see com.alibaba.nacos.naming.remote.rpc.handler.InstanceRequestHandler
  *
  * @author yanda
  */
 public class RegisterInstanceTraceEvent extends NamingTraceEvent {
     
     private static final long serialVersionUID = -8283438151444483864L;
-    
+
+    /**
+     * 发起注册的客户端ip
+     */
     private final String clientIp;
-    
+
+    /**
+     * 是否使用rpc
+     */
     private final boolean rpc;
-    
+
+    /**
+     * 注册成功的实例ip
+     */
     private final String instanceIp;
-    
+
+    /**
+     * 注册成功的实例端口
+     */
     private final int instancePort;
     
     public String getClientIp() {

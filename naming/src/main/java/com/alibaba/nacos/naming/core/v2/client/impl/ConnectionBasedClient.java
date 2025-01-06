@@ -22,12 +22,17 @@ import com.alibaba.nacos.naming.misc.ClientConfig;
 /**
  * Nacos naming client based on tcp session.
  *
+ * 基于TCP会话的Nacos的客户端，当TCP连接断开，该客户端就应被清除
+ *
  * <p>The client is bind to the tcp session. When the tcp session disconnect, the client should be clean.
  *
  * @author xiweng.yy
  */
 public class ConnectionBasedClient extends AbstractClient {
-    
+
+    /**
+     * 链接id，有客户端
+     */
     private final String connectionId;
     
     /**

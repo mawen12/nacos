@@ -23,26 +23,47 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Client sync data.
+ * 客户端同步数据
  *
  * @author xiweng.yy
  */
 public class ClientSyncData implements Serializable {
     
     private static final long serialVersionUID = -5141768777704539562L;
-    
+
+    /**
+     * 客户端id
+     */
     private String clientId;
-    
+
+    /**
+     * 客户端属性
+     */
     private ClientAttributes attributes;
-    
+
+    /**
+     * 命名空间列表
+     */
     private List<String> namespaces;
-    
+
+    /**
+     * 分组名成列表
+     */
     private List<String> groupNames;
-    
+
+    /**
+     * 服务名称列表
+     */
     private List<String> serviceNames;
-    
+
+    /**
+     * 实例发布信息列表
+     */
     private List<InstancePublishInfo> instancePublishInfos;
-    
+
+    /**
+     * 批量的梳理数据
+     */
     private BatchInstanceData batchInstanceData;
     
     public ClientSyncData() {

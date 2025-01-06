@@ -39,7 +39,7 @@ public class ServiceEvent extends Event {
     }
     
     /**
-     * Service data changed event.
+     * 服务数据变更事件
      */
     public static class ServiceChangedEvent extends ServiceEvent {
         
@@ -51,8 +51,14 @@ public class ServiceEvent extends Event {
         
         public ServiceChangedEvent(Service service, boolean incrementRevision) {
             super(service);
+            /**
+             * 更新服务的更新事件
+             */
             service.renewUpdateTime();
             if (incrementRevision) {
+                /**
+                 * 增加服务的变更次数
+                 */
                 service.incrementRevision();
             }
         }

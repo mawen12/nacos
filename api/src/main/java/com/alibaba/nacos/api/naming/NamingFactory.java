@@ -24,6 +24,9 @@ import java.util.Properties;
 /**
  * Naming Factory.
  *
+ * 简单工厂设计模式。
+ * 注册中心工厂，负责
+ *
  * @author nkorange
  */
 public class NamingFactory {
@@ -46,7 +49,7 @@ public class NamingFactory {
     }
     
     /**
-     * Create a new naming service.
+     * 使用属性创建注册中心
      *
      * @param properties naming service properties
      * @return new naming service
@@ -54,6 +57,9 @@ public class NamingFactory {
      */
     public static NamingService createNamingService(Properties properties) throws NacosException {
         try {
+            /**
+             * 加载类信息
+             */
             Class<?> driverImplClass = Class.forName("com.alibaba.nacos.client.naming.NacosNamingService");
             Constructor constructor = driverImplClass.getConstructor(Properties.class);
             return (NamingService) constructor.newInstance(properties);

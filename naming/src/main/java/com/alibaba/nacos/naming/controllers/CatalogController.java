@@ -52,7 +52,7 @@ public class CatalogController {
     private CatalogServiceV2Impl catalogServiceV2;
     
     /**
-     * Get service detail.
+     * 返回指定命名空间下服务的服务信息、服务元信息、服务下的集群信息
      *
      * @param namespaceId namespace id
      * @param serviceName service name
@@ -63,13 +63,22 @@ public class CatalogController {
     @GetMapping("/service")
     public Object serviceDetail(@RequestParam(defaultValue = Constants.DEFAULT_NAMESPACE_ID) String namespaceId,
             String serviceName) throws NacosException {
+        /**
+         * 解析服务名称，去掉分组名称
+         */
         String serviceNameWithoutGroup = NamingUtils.getServiceName(serviceName);
+        /**
+         * 解析服务名称，解析分组名称
+         */
         String groupName = NamingUtils.getGroupName(serviceName);
+        /**
+         * 返回指定命名空间、分组、服务名称下的服务详情
+         */
         return judgeCatalogService().getServiceDetail(namespaceId, groupName, serviceNameWithoutGroup);
     }
     
     /**
-     * List instances of special service.
+     * 获取特定服务下满足条件的实例信息
      *
      * @param namespaceId namespace id
      * @param serviceName service name
@@ -84,10 +93,21 @@ public class CatalogController {
     public ObjectNode instanceList(@RequestParam(defaultValue = Constants.DEFAULT_NAMESPACE_ID) String namespaceId,
             @RequestParam String serviceName, @RequestParam String clusterName, @RequestParam(name = "pageNo") int page,
             @RequestParam int pageSize) throws NacosException {
+        /**
+         * 从服务分组组合名称中解析服务名称
+         */
         String serviceNameWithoutGroup = NamingUtils.getServiceName(serviceName);
+        /**
+         * 获取分组名称，从 serviceName -> DEFAULT(DEFAULT_GROUP)
+         */
         String groupName = NamingUtils.getGroupName(serviceName);
-        List<? extends Instance> instances = judgeCatalogService()
-                .listInstances(namespaceId, groupName, serviceNameWithoutGroup, clusterName);
+        /**
+         * 获取满足匹配特定条件的实例信息
+         */
+        List<? extends Instance> instances = judgeCatalogService().listInstances(namespaceId, groupName, serviceNameWithoutGroup, clusterName);
+        /**
+         * 分页处理
+         */
         int start = (page - 1) * pageSize;
         int end = page * pageSize;
         
@@ -102,7 +122,10 @@ public class CatalogController {
         if (end > instances.size()) {
             end = instances.size();
         }
-        
+
+        /**
+         * 返回结果
+         */
         ObjectNode result = JacksonUtils.createEmptyJsonNode();
         result.replace("list", JacksonUtils.transferToJsonNode(instances.subList(start, end)));
         result.put("count", instances.size());
@@ -111,7 +134,7 @@ public class CatalogController {
     }
     
     /**
-     * List service detail information.
+     * 返回指定命名空间下的服务信息
      *
      * @param withInstances     whether return instances
      * @param namespaceId       namespace id
@@ -136,8 +159,7 @@ public class CatalogController {
         if (withInstances) {
             return judgeCatalogService().pageListServiceDetail(namespaceId, groupName, serviceName, pageNo, pageSize);
         }
-        return judgeCatalogService()
-                .pageListService(namespaceId, groupName, serviceName, pageNo, pageSize, containedInstance, hasIpCount);
+        return judgeCatalogService().pageListService(namespaceId, groupName, serviceName, pageNo, pageSize, containedInstance, hasIpCount);
     }
     
     private CatalogService judgeCatalogService() {

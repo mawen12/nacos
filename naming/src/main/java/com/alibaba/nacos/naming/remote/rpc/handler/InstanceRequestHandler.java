@@ -40,6 +40,8 @@ import org.springframework.stereotype.Component;
 /**
  * Instance request handler.
  *
+ * @see InstanceRequest
+ * @see InstanceResponse
  * @author xiweng.yy
  */
 @Component
@@ -56,35 +58,75 @@ public class InstanceRequestHandler extends RequestHandler<InstanceRequest, Inst
     @Secured(action = ActionTypes.WRITE)
     @ExtractorManager.Extractor(rpcExtractor = InstanceRequestParamExtractor.class)
     public InstanceResponse handle(InstanceRequest request, RequestMeta meta) throws NacosException {
-        Service service = Service.newService(request.getNamespace(), request.getGroupName(), request.getServiceName(),
-                true);
+        /**
+         * InstanceRequest -> Service
+         */
+        Service service = Service.newService(request.getNamespace(), request.getGroupName(), request.getServiceName(), true);
+        /**
+         * 向实例信息中设置带有分组的服务名称和实例id
+         */
         InstanceUtil.setInstanceIdIfEmpty(request.getInstance(), service.getGroupedServiceName());
         switch (request.getType()) {
             case NamingRemoteConstants.REGISTER_INSTANCE:
+                /**
+                 * 注册实例类型，则进行实例注册
+                 */
                 return registerInstance(service, request, meta);
             case NamingRemoteConstants.DE_REGISTER_INSTANCE:
+                /**
+                 * 注销实例类型，则进行实例注销
+                 */
                 return deregisterInstance(service, request, meta);
             default:
-                throw new NacosException(NacosException.INVALID_PARAM,
-                        String.format("Unsupported request type %s", request.getType()));
+                /**
+                 * 异常情况
+                 */
+                throw new NacosException(NacosException.INVALID_PARAM, String.format("Unsupported request type %s", request.getType()));
         }
     }
-    
+
+    /**
+     * 注册实例，并返回响应
+     *
+     * @param service
+     * @param request
+     * @param meta
+     * @return
+     * @throws NacosException
+     */
     private InstanceResponse registerInstance(Service service, InstanceRequest request, RequestMeta meta)
             throws NacosException {
+        /**
+         * 注册实例
+         */
         clientOperationService.registerInstance(service, request.getInstance(), meta.getConnectionId());
+        /**
+         * 发布注册实例追踪事件，用于追踪埋点
+         */
         NotifyCenter.publishEvent(new RegisterInstanceTraceEvent(System.currentTimeMillis(),
                 NamingRequestUtil.getSourceIpForGrpcRequest(meta), true, service.getNamespace(), service.getGroup(),
                 service.getName(), request.getInstance().getIp(), request.getInstance().getPort()));
+        /**
+         * 返回注册成功的响应
+         */
         return new InstanceResponse(NamingRemoteConstants.REGISTER_INSTANCE);
     }
     
     private InstanceResponse deregisterInstance(Service service, InstanceRequest request, RequestMeta meta) {
+        /**
+         * 注销实例
+         */
         clientOperationService.deregisterInstance(service, request.getInstance(), meta.getConnectionId());
+        /**
+         * 发布实例注销追踪事件，用于追踪埋点
+         */
         NotifyCenter.publishEvent(new DeregisterInstanceTraceEvent(System.currentTimeMillis(),
                 NamingRequestUtil.getSourceIpForGrpcRequest(meta), true, DeregisterInstanceReason.REQUEST,
                 service.getNamespace(), service.getGroup(), service.getName(), request.getInstance().getIp(),
                 request.getInstance().getPort()));
+        /**
+         * 返回注销成功的响应
+         */
         return new InstanceResponse(NamingRemoteConstants.DE_REGISTER_INSTANCE);
     }
     

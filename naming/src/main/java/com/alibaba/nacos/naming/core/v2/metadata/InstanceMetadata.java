@@ -30,15 +30,18 @@ public class InstanceMetadata implements Serializable {
     private static final long serialVersionUID = -8477858617353459226L;
     
     /**
-     * instance weight.
+     * 实例权重
      */
     private double weight = 1.0D;
     
     /**
-     * If instance is enabled to accept request.
+     * 实例接受请求开关
      */
     private boolean enabled = true;
-    
+
+    /**
+     * 用户自定义的扩展信息
+     */
     private Map<String, Object> extendData = new ConcurrentHashMap<>(1);
     
     public double getWeight() {

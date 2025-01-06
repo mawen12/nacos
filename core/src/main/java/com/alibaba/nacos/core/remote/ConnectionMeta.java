@@ -38,7 +38,7 @@ import static com.alibaba.nacos.api.common.Constants.VIPSERVER_TAG;
 public class ConnectionMeta {
     
     /**
-     * ConnectionType.
+     * 链接类型：GRPC、HTTP
      */
     String connectType;
     

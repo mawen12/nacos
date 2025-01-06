@@ -31,15 +31,30 @@ import java.util.Objects;
 public class InstancePublishInfo implements Serializable {
     
     private static final long serialVersionUID = -74988890439616025L;
-    
+
+    /**
+     * 注册的实例ip
+     */
     private String ip;
-    
+
+    /**
+     * 注册的实例端口
+     */
     private int port;
-    
+
+    /**
+     * 客户端是否健康
+     */
     private boolean healthy;
-    
+
+    /**
+     * 实例所属集群
+     */
     private String cluster;
-    
+
+    /**
+     * 自定义的扩展信息
+     */
     private Map<String, Object> extendDatum;
     
     public InstancePublishInfo() {

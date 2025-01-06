@@ -28,15 +28,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Nacos service manager for v2.
+ * 单例设计模式
+ *
+ * Nacos的服务管理器，保存了服务信息(namespace+group+name)，并管理了不同命名空间下对应的服务信息列表
  *
  * @author xiweng.yy
  */
 public class ServiceManager {
     
     private static final ServiceManager INSTANCE = new ServiceManager();
-    
+
+    /**
+     * Map<服务信息, 服务信息>
+     * 可以使用{@link ConcurrentHashSet}，主要为了在设置值之后，发送事件
+     */
     private final ConcurrentHashMap<Service, Service> singletonRepository;
-    
+
+    /**
+     * Map<命名空间, 归属于同一个命名空间下的服务列表>
+     */
     private final ConcurrentHashMap<String, Set<Service>> namespaceSingletonMaps;
     
     private ServiceManager() {
@@ -59,11 +69,20 @@ public class ServiceManager {
      * @return if service is exist, return exist service, otherwise return new service
      */
     public Service getSingleton(Service service) {
+        /**
+         * 如果{@link #singletonRepository}中不存在，则放入，并发送{@link MetadataEvent.ServiceMetadataEvent}事件
+         */
         Service result = singletonRepository.computeIfAbsent(service, key -> {
             NotifyCenter.publishEvent(new MetadataEvent.ServiceMetadataEvent(service, false));
             return service;
         });
+        /**
+         * 如果{@link namespaceSingletonMaps}中不存在，则放入
+         */
         namespaceSingletonMaps.computeIfAbsent(result.getNamespace(), namespace -> new ConcurrentHashSet<>()).add(result);
+        /**
+         * 返回结果
+         */
         return result;
     }
     

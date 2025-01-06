@@ -19,7 +19,7 @@ package com.alibaba.nacos.api.naming.selector;
 import com.alibaba.nacos.api.selector.client.Selector;
 
 /**
- * Naming selector.
+ * 注册中心选择器
  *
  * @author lideyou
  */

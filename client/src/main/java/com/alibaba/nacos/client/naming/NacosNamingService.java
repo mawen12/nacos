@@ -57,7 +57,7 @@ import static com.alibaba.nacos.client.naming.selector.NamingSelectorFactory.get
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * Nacos Naming Service.
+ * Nacos 注册中心服务
  *
  * @author nkorange
  */
@@ -97,22 +97,55 @@ public class NacosNamingService implements NamingService {
     }
     
     private void init(Properties properties) throws NacosException {
+        /**
+         * 异步线程初始化 {@link com.fasterxml.jackson.databind.ObjectMapper} 和 {@link com.alibaba.nacos.client.auth.ram.identify.CredentialService}
+         */
         PreInitUtils.asyncPreLoadCostComponent();
+        /**
+         * 构造属性值
+         */
         final NacosClientProperties nacosClientProperties = NacosClientProperties.PROTOTYPE.derive(properties);
+        /**
+         * 日志打印参数
+         */
         NAMING_LOGGER.info(ParamUtil.getInputParameters(nacosClientProperties.asProperties()));
+        /**
+         * 校验参数
+         */
         ValidatorUtils.checkInitParam(nacosClientProperties);
+        /**
+         * 初始化namespace,{@link #namespace}
+         */
         this.namespace = InitUtils.initNamespaceForNaming(nacosClientProperties);
+        /**
+         * 注册节点选择器，
+         * {@link com.alibaba.nacos.api.selector.NoneSelector},
+         * {@link com.alibaba.nacos.api.selector.ExpressionSelector}
+         */
         InitUtils.initSerialization();
+        /**
+         * 初始化web路径 /nacos/v1/ns/instance
+         */
         InitUtils.initWebRootContext(nacosClientProperties);
+        /**
+         * 注册日志名称, 从 PROPERTIES(com.alibaba.nacos.naming.log.filename) -> DEFAULT(naming.log)
+         */
         initLogName(nacosClientProperties);
-        
         this.notifierEventScope = UUID.randomUUID().toString();
+        /**
+         * 创建实例变更日志
+         */
         this.changeNotifier = new InstancesChangeNotifier(this.notifierEventScope);
+        /**
+         * 注册事件发布器，{@link InstancesChangeEvent}
+         */
         NotifyCenter.registerToPublisher(InstancesChangeEvent.class, 16384);
+        /**
+         * 注册监听器
+         */
         NotifyCenter.registerSubscriber(changeNotifier);
         this.serviceInfoHolder = new ServiceInfoHolder(namespace, this.notifierEventScope, nacosClientProperties);
-        this.clientProxy = new NamingClientProxyDelegate(this.namespace, serviceInfoHolder, nacosClientProperties,
-                changeNotifier);
+        this.clientProxy = new NamingClientProxyDelegate(this.namespace, serviceInfoHolder, nacosClientProperties, changeNotifier);
     }
     
     @Deprecated
@@ -192,10 +225,16 @@ public class NacosNamingService implements NamingService {
     @Override
     public void deregisterInstance(String serviceName, String groupName, String ip, int port, String clusterName)
             throws NacosException {
+        /**
+         * 构建 Instance
+         */
         Instance instance = new Instance();
         instance.setIp(ip);
         instance.setPort(port);
         instance.setClusterName(clusterName);
+        /**
+         * 注销指定服务
+         */
         deregisterInstance(serviceName, groupName, instance);
     }
     
@@ -206,8 +245,17 @@ public class NacosNamingService implements NamingService {
     
     @Override
     public void deregisterInstance(String serviceName, String groupName, Instance instance) throws NacosException {
+        /**
+         * 校验实例信息不为空、时间合法、集群名称合法
+         */
         NamingUtils.checkInstanceIsLegal(instance);
+        /**
+         * 校验分组名称和实例上的分组名称一致
+         */
         checkAndStripGroupNamePrefix(instance, groupName);
+        /**
+         * 发送注销的rpc请求{@link com.alibaba.nacos.api.naming.remote.request.InstanceRequest}
+         */
         clientProxy.deregisterService(serviceName, groupName, instance);
     }
     
@@ -406,22 +454,34 @@ public class NacosNamingService implements NamingService {
     
     @Override
     public void subscribe(String serviceName, EventListener listener) throws NacosException {
+        /**
+         * 订阅任意集群的实例
+         */
         subscribe(serviceName, new ArrayList<>(), listener);
     }
     
     @Override
     public void subscribe(String serviceName, String groupName, EventListener listener) throws NacosException {
+        /**
+         * 订阅任意集群的实例
+         */
         subscribe(serviceName, groupName, new ArrayList<>(), listener);
     }
     
     @Override
     public void subscribe(String serviceName, List<String> clusters, EventListener listener) throws NacosException {
+        /**
+         * 订阅默认分组下的实例
+         */
         subscribe(serviceName, Constants.DEFAULT_GROUP, clusters, listener);
     }
     
     @Override
     public void subscribe(String serviceName, String groupName, List<String> clusters, EventListener listener)
             throws NacosException {
+        /**
+         * 构造实例选择器
+         */
         NamingSelector clusterSelector = NamingSelectorFactory.newClusterSelector(clusters);
         doSubscribe(serviceName, groupName, getUniqueClusterString(clusters), clusterSelector, listener);
     }
@@ -437,12 +497,20 @@ public class NacosNamingService implements NamingService {
         doSubscribe(serviceName, groupName, Constants.NULL, selector, listener);
     }
     
-    private void doSubscribe(String serviceName, String groupName, String clusters, NamingSelector selector,
-            EventListener listener) throws NacosException {
+    private void doSubscribe(String serviceName, String groupName, String clusters, NamingSelector selector, EventListener listener) throws NacosException {
+        /**
+         * 如果选择器或者监听器
+         */
         if (selector == null || listener == null) {
             return;
         }
+        /**
+         * 构造注册中心包装器
+         */
         NamingSelectorWrapper wrapper = new NamingSelectorWrapper(serviceName, groupName, clusters, selector, listener);
+        /**
+         *
+         */
         notifyIfSubscribed(serviceName, groupName, wrapper);
         changeNotifier.registerListener(groupName, serviceName, wrapper);
         clientProxy.subscribe(serviceName, groupName, Constants.NULL);
@@ -541,21 +609,27 @@ public class NacosNamingService implements NamingService {
     private void checkAndStripGroupNamePrefix(Instance instance, String groupName) throws NacosException {
         String serviceName = instance.getServiceName();
         if (NamingUtils.isServiceNameCompatibilityMode(serviceName)) {
+            /**
+             * 从{@code group@@service}中解析group
+             */
             String groupNameOfInstance = NamingUtils.getGroupName(serviceName);
+            /**
+             * 实例的分组名称必须和服务所在的分组名称一致
+             */
             if (!groupName.equals(groupNameOfInstance)) {
-                throw new NacosException(NacosException.CLIENT_INVALID_PARAM, String.format(
-                        "wrong group name prefix of instance service name! it should be: %s, Instance: %s", groupName,
-                        instance));
+                throw new NacosException(NacosException.CLIENT_INVALID_PARAM, String.format("wrong group name prefix of instance service name! it should be: %s, Instance: %s", groupName, instance));
             }
+            /**
+             * 从{@code group@@service}中解析service
+             */
             instance.setServiceName(NamingUtils.getServiceName(serviceName));
         }
     }
     
     private void notifyIfSubscribed(String serviceName, String groupName, NamingSelectorWrapper wrapper) {
+
         if (changeNotifier.isSubscribed(groupName, serviceName)) {
-            NAMING_LOGGER.warn(
-                    "Duplicate subscribe for groupName: {}, serviceName: {}; directly use current cached to notify.",
-                    groupName, serviceName);
+            NAMING_LOGGER.warn("Duplicate subscribe for groupName: {}, serviceName: {}; directly use current cached to notify.", groupName, serviceName);
             ServiceInfo serviceInfo = serviceInfoHolder.getServiceInfo(serviceName, groupName, Constants.NULL);
             InstancesChangeEvent event = transferToEvent(serviceInfo);
             wrapper.notifyListener(event);

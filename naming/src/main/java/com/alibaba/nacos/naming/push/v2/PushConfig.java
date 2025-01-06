@@ -44,12 +44,18 @@ public class PushConfig extends AbstractDynamicConfig {
     
     @Override
     protected void getConfigFromEnv() {
-        pushTaskDelay = EnvUtil
-                .getProperty(PushConstants.PUSH_TASK_DELAY, Long.class, PushConstants.DEFAULT_PUSH_TASK_DELAY);
-        pushTaskTimeout = EnvUtil
-                .getProperty(PushConstants.PUSH_TASK_TIMEOUT, Long.class, PushConstants.DEFAULT_PUSH_TASK_TIMEOUT);
-        pushTaskRetryDelay = EnvUtil.getProperty(PushConstants.PUSH_TASK_RETRY_DELAY, Long.class,
-                PushConstants.DEFAULT_PUSH_TASK_RETRY_DELAY);
+        /**
+         * 获取推送任务的延迟间隔，从 ENV(nacos.naming.push.pushTaskDelay) -> DEFAULT(500)
+         */
+        pushTaskDelay = EnvUtil.getProperty(PushConstants.PUSH_TASK_DELAY, Long.class, PushConstants.DEFAULT_PUSH_TASK_DELAY);
+        /**
+         * 获取推送任务的超时时间，从 ENV(nacos.naming.push.pushTaskTimeout) -> DEFAULT(5000)
+         */
+        pushTaskTimeout = EnvUtil.getProperty(PushConstants.PUSH_TASK_TIMEOUT, Long.class, PushConstants.DEFAULT_PUSH_TASK_TIMEOUT);
+        /**
+         * 获取推送任务的重试间隔，从 ENV(nacos.naming.push.pushTaskRetryDelay) -> DEFAULT(1000)
+         */
+        pushTaskRetryDelay = EnvUtil.getProperty(PushConstants.PUSH_TASK_RETRY_DELAY, Long.class, PushConstants.DEFAULT_PUSH_TASK_RETRY_DELAY);
     }
     
     @Override

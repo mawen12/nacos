@@ -22,7 +22,7 @@ import com.alibaba.nacos.common.notify.Event;
 import java.util.Objects;
 
 /**
- * Selector Wrapper.
+ * 实例选择器包装器
  *
  * @param <S> the type of selector
  * @param <T> the type of original event
@@ -30,9 +30,15 @@ import java.util.Objects;
  * @author lideyou
  */
 public abstract class AbstractSelectorWrapper<S extends Selector<?, ?>, E, T extends Event> {
-    
+
+    /**
+     * 实例选择器
+     */
     private final S selector;
-    
+
+    /**
+     * 监听器调用者
+     */
     private final ListenerInvoker<E> listener;
     
     public AbstractSelectorWrapper(S selector, ListenerInvoker<E> listener) {

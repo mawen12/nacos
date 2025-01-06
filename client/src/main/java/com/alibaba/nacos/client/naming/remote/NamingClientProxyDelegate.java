@@ -67,18 +67,14 @@ public class NamingClientProxyDelegate implements NamingClientProxy {
     
     private ScheduledExecutorService executorService;
     
-    public NamingClientProxyDelegate(String namespace, ServiceInfoHolder serviceInfoHolder,
-            NacosClientProperties properties, InstancesChangeNotifier changeNotifier) throws NacosException {
-        this.serviceInfoUpdateService = new ServiceInfoUpdateService(properties, serviceInfoHolder, this,
-                changeNotifier);
+    public NamingClientProxyDelegate(String namespace, ServiceInfoHolder serviceInfoHolder, NacosClientProperties properties, InstancesChangeNotifier changeNotifier) throws NacosException {
+        this.serviceInfoUpdateService = new ServiceInfoUpdateService(properties, serviceInfoHolder, this, changeNotifier);
         this.serverListManager = new ServerListManager(properties, namespace);
         this.serviceInfoHolder = serviceInfoHolder;
-        this.securityProxy = new SecurityProxy(this.serverListManager.getServerList(),
-                NamingHttpClientManager.getInstance().getNacosRestTemplate());
+        this.securityProxy = new SecurityProxy(this.serverListManager.getServerList(), NamingHttpClientManager.getInstance().getNacosRestTemplate());
         initSecurityProxy(properties);
         this.httpClientProxy = new NamingHttpClientProxy(namespace, securityProxy, serverListManager, properties);
-        this.grpcClientProxy = new NamingGrpcClientProxy(namespace, securityProxy, serverListManager, properties,
-                serviceInfoHolder);
+        this.grpcClientProxy = new NamingGrpcClientProxy(namespace, securityProxy, serverListManager, properties, serviceInfoHolder);
     }
     
     private void initSecurityProxy(NacosClientProperties properties) {
@@ -192,6 +188,9 @@ public class NamingClientProxyDelegate implements NamingClientProxy {
     }
     
     private NamingClientProxy getExecuteClientProxy(Instance instance) {
+        /**
+         * 如果实例是瞬时的，
+         */
         if (instance.isEphemeral() || grpcClientProxy.isAbilitySupportedByServer(AbilityKey.SERVER_SUPPORT_PERSISTENT_INSTANCE_BY_GRPC)) {
             return grpcClientProxy;
         }

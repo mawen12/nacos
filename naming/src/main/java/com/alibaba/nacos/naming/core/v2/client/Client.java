@@ -25,6 +25,8 @@ import java.util.Collection;
 /**
  * Nacos naming client.
  *
+ * Nacos 注册中心客户端
+ *
  * <p>The abstract concept of the client stored by on the server of Nacos naming module. It is used to store which
  * services the client has published and subscribed.
  *

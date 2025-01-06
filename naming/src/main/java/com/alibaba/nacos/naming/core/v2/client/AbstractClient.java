@@ -39,18 +39,35 @@ import static com.alibaba.nacos.naming.constants.ClientConstants.REVISION;
 /**
  * Abstract implementation of {@code Client}.
  *
+ * 代表Nacos客户端的抽象实现
+ *
  * @author xiweng.yy
  */
 public abstract class AbstractClient implements Client {
-    
+
+    /**
+     * 发布者：Map<当前客户端注册的服务信息, 该客户端在该服务下注册的实例>
+     */
     protected final ConcurrentHashMap<Service, InstancePublishInfo> publishers = new ConcurrentHashMap<>(16, 0.75f, 1);
-    
+
+    /**
+     * 订阅者：Map<当前客户端注册的服务信息, 该服务的订阅列表>
+     */
     protected final ConcurrentHashMap<Service, Subscriber> subscribers = new ConcurrentHashMap<>(16, 0.75f, 1);
-    
+
+    /**
+     * 最后更新时间，支持多线程
+     */
     protected volatile long lastUpdatedTime;
-    
+
+    /**
+     * 编辑次数
+     */
     protected final AtomicLong revision;
-    
+
+    /**
+     * 客户端属性
+     */
     protected ClientAttributes attributes;
     
     public AbstractClient(Long revision) {
@@ -74,10 +91,17 @@ public abstract class AbstractClient implements Client {
             InstancePublishInfo old = publishers.put(service, instancePublishInfo);
             MetricsMonitor.incrementIpCountWithBatchRegister(old, (BatchInstancePublishInfo) instancePublishInfo);
         } else {
+            /**
+             * 如果发布者加入成功，则新增对应指标，如果之前有值，代表客户端之前注册过该服务的实例，无需再次统计
+             */
             if (null == publishers.put(service, instancePublishInfo)) {
+                // 增加注册的实例数量，用于统计埋点
                 MetricsMonitor.incrementInstanceCount();
             }
         }
+        /**
+         * 发布客户端变更事件，用于通知其他节点此客户端新注册了实例
+         */
         NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(this));
         Loggers.SRV_LOG.info("Client change for service {}, {}", service, getClientId());
         return true;
@@ -85,13 +109,20 @@ public abstract class AbstractClient implements Client {
     
     @Override
     public InstancePublishInfo removeServiceInstance(Service service) {
+        /**
+         * 移除服务，并返回当前发布的实例信息
+         */
         InstancePublishInfo result = publishers.remove(service);
         if (null != result) {
             if (result instanceof BatchInstancePublishInfo) {
                 MetricsMonitor.decrementIpCountWithBatchRegister(result);
             } else {
+                // 减少注册的实例数量，用于统计埋点
                 MetricsMonitor.decrementInstanceCount();
             }
+            /**
+             * 发布客户端变更事件，用于通知其他节点此客户端注销了实例
+             */
             NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(this));
         }
         Loggers.SRV_LOG.info("Client remove for service {}, {}", service, getClientId());

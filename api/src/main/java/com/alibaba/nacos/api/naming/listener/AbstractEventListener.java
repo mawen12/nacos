@@ -19,7 +19,7 @@ package com.alibaba.nacos.api.naming.listener;
 import java.util.concurrent.Executor;
 
 /**
- * Abstract event listener, to support handle event by user custom executor.
+ * 抽象事件监听器，支持用户自定义的执行器来处理事件
  *
  * @author horizonzy
  * @since 1.4.1
@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
 public abstract class AbstractEventListener implements EventListener {
     
     /**
-     * Get executor for execute this receive.
+     * 提供处理事件的执行器
      *
      * @return Executor
      */

@@ -63,8 +63,7 @@ public class NamingSubscriberServiceV2Impl extends SmartSubscriber implements Na
             NamingMetadataManager metadataManager, PushExecutorDelegate pushExecutor, SwitchDomain switchDomain) {
         this.clientManager = clientManager;
         this.indexesManager = indexesManager;
-        this.delayTaskEngine = new PushDelayTaskExecuteEngine(clientManager, indexesManager, serviceStorage,
-                metadataManager, pushExecutor, switchDomain);
+        this.delayTaskEngine = new PushDelayTaskExecuteEngine(clientManager, indexesManager, serviceStorage, metadataManager, pushExecutor, switchDomain);
         NotifyCenter.registerSubscriber(this, NamingEventPublisherFactory.getInstance());
         
     }
@@ -114,9 +113,15 @@ public class NamingSubscriberServiceV2Impl extends SmartSubscriber implements Na
     @Override
     public void onEvent(Event event) {
         if (event instanceof ServiceEvent.ServiceChangedEvent) {
-            // If service changed, push to all subscribers.
+            /**
+             * 如果服务变更，将该服务推送到所有的订阅者
+             */
             ServiceEvent.ServiceChangedEvent serviceChangedEvent = (ServiceEvent.ServiceChangedEvent) event;
             Service service = serviceChangedEvent.getService();
+            /**
+             * Service -> PushDelayTask
+             * 将任务投递到延迟队列中，在0.5s后执行任务
+             */
             delayTaskEngine.addTask(service, new PushDelayTask(service, PushConfig.getInstance().getPushTaskDelay()));
             MetricsMonitor.incrementServiceChangeCount(service);
         } else if (event instanceof ServiceEvent.ServiceSubscribedEvent) {

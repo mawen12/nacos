@@ -16,12 +16,13 @@
 
 package com.alibaba.nacos.naming.core.v2.event.client;
 
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.common.notify.Event;
 import com.alibaba.nacos.naming.core.v2.client.Client;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
 
 /**
- * Operation client event.
+ * 客户端操作事件
  *
  * @author xiweng.yy
  */
@@ -47,7 +48,11 @@ public class ClientOperationEvent extends Event {
     }
     
     /**
-     * Client register service event.
+     * 客户端注册Nacos事件
+     *
+     * 由{@link com.alibaba.nacos.naming.core.v2.service.impl.EphemeralClientOperationServiceImpl#registerInstance(Service, Instance, String)}触发
+     * 监听{@link com.alibaba.nacos.naming.core.v2.index.ClientServiceIndexesManager#addPublisherIndexes(Service, String)}监听处理
+     *
      */
     public static class ClientRegisterServiceEvent extends ClientOperationEvent {
         
@@ -59,7 +64,7 @@ public class ClientOperationEvent extends Event {
     }
     
     /**
-     * Client deregister service event.
+     * 客户端注销Nacos事件
      */
     public static class ClientDeregisterServiceEvent extends ClientOperationEvent {
         
@@ -71,7 +76,7 @@ public class ClientOperationEvent extends Event {
     }
     
     /**
-     * Client subscribe service event.
+     * 客户端订阅Nacos事件
      */
     public static class ClientSubscribeServiceEvent extends ClientOperationEvent {
         
@@ -83,7 +88,7 @@ public class ClientOperationEvent extends Event {
     }
     
     /**
-     * Client unsubscribe service event.
+     * 客户端取消订阅Nacos事件
      */
     public static class ClientUnsubscribeServiceEvent extends ClientOperationEvent {
         

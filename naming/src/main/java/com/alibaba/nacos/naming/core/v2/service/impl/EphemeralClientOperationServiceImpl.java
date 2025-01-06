@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Operation service for ephemeral clients and services.
+ * 为临时客户端和服务提供操作服务
  *
  * @author xiweng.yy
  */
@@ -54,23 +54,57 @@ public class EphemeralClientOperationServiceImpl implements ClientOperationServi
     
     @Override
     public void registerInstance(Service service, Instance instance, String clientId) throws NacosException {
+        /**
+         * 校验实例非空，超时时间，集群名称
+         */
         NamingUtils.checkInstanceIsLegal(instance);
-    
+        /**
+         * 从ServiceManger中获取对应服务，如果服务不存在，则加入到{@link ServiceManager#singletonRepository}, {@link ServiceManager#namespaceSingletonMaps}，
+         * 并发布{@link com.alibaba.nacos.naming.core.v2.event.metadata.MetadataEvent.ServiceMetadataEvent}，
+         * 如果服务已经存在，代表该服务下已经存在了实例，可以组成集群
+         */
         Service singleton = ServiceManager.getInstance().getSingleton(service);
+        /**
+         * 服务必须是临时的
+         */
         if (!singleton.isEphemeral()) {
-            throw new NacosRuntimeException(NacosException.INVALID_PARAM,
-                    String.format("Current service %s is persistent service, can't register ephemeral instance.",
-                            singleton.getGroupedServiceName()));
+            throw new NacosRuntimeException(NacosException.INVALID_PARAM, String.format("Current service %s is persistent service, can't register ephemeral instance.", singleton.getGroupedServiceName()));
         }
+
+        /**
+         * 从ClientManager中获取对应客户端，如果客户端不存在，则返回null
+         */
         Client client = clientManager.getClient(clientId);
+        /**
+         * 校验客户端非空，且为ephemeral
+         * 如果客户端为空，则代表执行实例注册的客户端已经断开链接，那就无法执行注册了，直接报错
+         */
         checkClientIsLegal(client, clientId);
+        /**
+         * 从 Instance -> InstancePublishInfo
+         */
         InstancePublishInfo instanceInfo = getPublishInfo(instance);
+        /**
+         * 将服务信息和实例发布信息写入到客户端的{@link com.alibaba.nacos.naming.core.v2.client.impl.ConnectionBasedClient#publishers}
+         */
         client.addServiceInstance(singleton, instanceInfo);
+        /**
+         * 更新客户端的最后更新时间
+         */
         client.setLastUpdatedTime();
+        /**
+         * 更新客户端的编辑次数
+         */
         client.recalculateRevision();
+        /**
+         * 发布客户端注册服务事件，将服务和客户端写入到{@link com.alibaba.nacos.naming.core.v2.index.ClientServiceIndexesManager#publisherIndexes}中，
+         * 并通知到所有监听的客户端
+         */
         NotifyCenter.publishEvent(new ClientOperationEvent.ClientRegisterServiceEvent(singleton, clientId));
-        NotifyCenter
-                .publishEvent(new MetadataEvent.InstanceMetadataEvent(singleton, instanceInfo.getMetadataId(), false));
+        /**
+         * 发布实例元数据事件
+         */
+        NotifyCenter.publishEvent(new MetadataEvent.InstanceMetadataEvent(singleton, instanceInfo.getMetadataId(), false));
     }
     
     @Override
@@ -100,12 +134,24 @@ public class EphemeralClientOperationServiceImpl implements ClientOperationServi
     
     @Override
     public void deregisterInstance(Service service, Instance instance, String clientId) {
+        /**
+         * 如果服务端不存在该服务，代表之前服务已经注销，或者没有任何实例注册过该服务，则直接返回
+         */
         if (!ServiceManager.getInstance().containSingleton(service)) {
             Loggers.SRV_LOG.warn("remove instance from non-exist service: {}", service);
             return;
         }
+        /**
+         * 获取服务信息，如果服务信息不存在，应该之前判断，无法走到这一步
+         */
         Service singleton = ServiceManager.getInstance().getSingleton(service);
+        /**
+         * 获取对应的客户端
+         */
         Client client = clientManager.getClient(clientId);
+        /**
+         * 校验客户端非空，并且客户端必须是临时的
+         */
         checkClientIsLegal(client, clientId);
         InstancePublishInfo removedInstance = client.removeServiceInstance(singleton);
         client.setLastUpdatedTime();
@@ -138,12 +184,18 @@ public class EphemeralClientOperationServiceImpl implements ClientOperationServi
     }
 
     private void checkClientIsLegal(Client client, String clientId) {
+        /**
+         * 客户端非空校验
+         */
         if (client == null) {
             Loggers.SRV_LOG.warn("Client connection {} already disconnect", clientId);
             throw new NacosRuntimeException(NacosException.CLIENT_DISCONNECT,
                     String.format("Client [%s] connection already disconnect, can't register ephemeral instance.",
                             clientId));
         }
+        /**
+         * 客户端必须是ephemeral校验
+         */
         if (!client.isEphemeral()) {
             Loggers.SRV_LOG.warn("Client connection {} type is not ephemeral", clientId);
             throw new NacosRuntimeException(NacosException.INVALID_PARAM,

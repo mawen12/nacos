@@ -54,20 +54,29 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
     private int redoThreadCount;
     
     private long redoDelayTime;
-    
+
+    /**
+     * Map<带有分组的服务名称, 实例恢复信息>
+     * 临时保存注册的服务实例信息集合
+     */
     private final ConcurrentMap<String, InstanceRedoData> registeredInstances = new ConcurrentHashMap<>();
-    
+
+    /**
+     * 临时保存服务的订阅者列表集合
+     */
     private final ConcurrentMap<String, SubscriberRedoData> subscribes = new ConcurrentHashMap<>();
     
     private final ScheduledExecutorService redoExecutor;
-    
+
+    /**
+     * 该状态可以被其他线程修改，因为该状态由两个地方操作
+     */
     private volatile boolean connected = false;
     
     public NamingGrpcRedoService(NamingGrpcClientProxy clientProxy, NacosClientProperties properties) {
         setProperties(properties);
         this.redoExecutor = new ScheduledThreadPoolExecutor(redoThreadCount, new NameThreadFactory(REDO_THREAD_NAME));
-        this.redoExecutor.scheduleWithFixedDelay(new RedoScheduledTask(clientProxy, this), redoDelayTime, redoDelayTime,
-                TimeUnit.MILLISECONDS);
+        this.redoExecutor.scheduleWithFixedDelay(new RedoScheduledTask(clientProxy, this), redoDelayTime, redoDelayTime, TimeUnit.MILLISECONDS);
     }
     
     private void setProperties(NacosClientProperties properties) {
@@ -111,9 +120,18 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
      * @param instance    registered instance
      */
     public void cacheInstanceForRedo(String serviceName, String groupName, Instance instance) {
+        /**
+         * 构造带有分组的服务名称，格式为{@code group@@serviceName}
+         */
         String key = NamingUtils.getGroupedName(serviceName, groupName);
+        /**
+         * 构造实例恢复数据
+         */
         InstanceRedoData redoData = InstanceRedoData.build(serviceName, groupName, instance);
         synchronized (registeredInstances) {
+            /**
+             * 将该信息写入本地内存
+             */
             registeredInstances.put(key, redoData);
         }
     }
@@ -140,6 +158,9 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
      * @param groupName   group name
      */
     public void instanceRegistered(String serviceName, String groupName) {
+        /**
+         * 构造带有分组的服务名称，格式为{@code group@@serviceName}
+         */
         String key = NamingUtils.getGroupedName(serviceName, groupName);
         synchronized (registeredInstances) {
             InstanceRedoData redoData = registeredInstances.get(key);
@@ -156,11 +177,18 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
      * @param groupName   group name
      */
     public void instanceDeregister(String serviceName, String groupName) {
+        /**
+         * 构造带有分组的服务名称，格式为{@code group@@serviceName}
+         */
         String key = NamingUtils.getGroupedName(serviceName, groupName);
         synchronized (registeredInstances) {
+            /**
+             * 获取对应的实例恢复数据，并更新为取消注册
+             */
             InstanceRedoData redoData = registeredInstances.get(key);
             if (null != redoData) {
                 redoData.setUnregistering(true);
+                // 客户端不再尝试向Nacos Server注册
                 redoData.setExpectedRegistered(false);
             }
         }
@@ -173,10 +201,16 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
      * @param groupName   group name
      */
     public void instanceDeregistered(String serviceName, String groupName) {
+        /**
+         * 构造带有分组的服务名称，格式为{@code group@@serviceName}
+         */
         String key = NamingUtils.getGroupedName(serviceName, groupName);
         synchronized (registeredInstances) {
             InstanceRedoData redoData = registeredInstances.get(key);
             if (null != redoData) {
+                /**
+                 * 更新本地实例恢复数据为未注册
+                 */
                 redoData.unregistered();
             }
         }
@@ -189,6 +223,9 @@ public class NamingGrpcRedoService implements ConnectionEventListener {
      * @param groupName   group name
      */
     public void removeInstanceForRedo(String serviceName, String groupName) {
+        /**
+         * 构造带有分组的服务名称，格式为{@code group@@serviceName}
+         */
         String key = NamingUtils.getGroupedName(serviceName, groupName);
         synchronized (registeredInstances) {
             InstanceRedoData redoData = registeredInstances.get(key);

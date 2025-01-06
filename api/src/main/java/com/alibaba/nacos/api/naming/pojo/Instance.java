@@ -38,54 +38,55 @@ public class Instance implements Serializable {
     private static final long serialVersionUID = -742906310567291979L;
     
     /**
-     * unique id of this instance.
+     * 实例Id，格式为{@code ip#port#cluster#group@@serviceName}
+     * 示例：192.168.108.1#8082#DEFAULT#DEFAULT_GROUP@@nacos-spring-cloud-provider
      */
     private String instanceId;
     
     /**
-     * instance ip.
+     * 实例ip
      */
     private String ip;
     
     /**
-     * instance port.
+     * 实例端口
      */
     private int port;
     
     /**
-     * instance weight.
+     * 实例权重
      */
     private double weight = 1.0D;
     
     /**
-     * instance health status.
+     * 实例健康状态
      */
     private boolean healthy = true;
     
     /**
-     * If instance is enabled to accept request.
+     * 实例是否开启接受请求
      */
     private boolean enabled = true;
     
     /**
-     * If instance is ephemeral.
+     * 实例是否是短暂的
      *
      * @since 1.0.0
      */
     private boolean ephemeral = true;
     
     /**
-     * cluster information of instance.
+     * 实例所在的集群名称，默认为DEFAULT
      */
     private String clusterName;
     
     /**
-     * Service information of instance.
+     * 实例所在服务名称，格式为{@code group@@service}
      */
     private String serviceName;
     
     /**
-     * user extended attributes.
+     * 用户扩展属性
      */
     private Map<String, String> metadata = new HashMap<>();
     

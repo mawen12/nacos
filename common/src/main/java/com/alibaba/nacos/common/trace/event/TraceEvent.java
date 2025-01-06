@@ -19,44 +19,70 @@ package com.alibaba.nacos.common.trace.event;
 import com.alibaba.nacos.common.notify.Event;
 
 /**
- * Trace event.
+ * 跟踪事件
  *
  * @author yanda
+ * @see com.alibaba.nacos.core.trace.NacosCombinedTraceSubscriber 事件订阅者
  */
 public class TraceEvent extends Event {
-    
+
     private static final long serialVersionUID = -3065900892505697062L;
-    
+
+    /**
+     * 事件类型
+     * <pre>
+     * +------+--------------------------------+
+     * |  含义  |               值                |
+     * +------+--------------------------------+
+     * | 实例注册 | REGISTER_INSTANCE_TRACE_EVENT  |
+     * | 实例注销 | DEREGISTER_SERVICE_TRACE_EVENT |
+     * | 服务注册 | REGISTER_SERVICE_TRACE_EVENT   |
+     * | 服务注销 | DEREGISTER_SERVICE_TRACE_EVENT |
+     * +------+--------------------------------+
+     * </pre>
+     */
     private final String type;
-    
+
+    /**
+     * 事件创建的时间
+     */
     private final long eventTime;
-    
+
+    /**
+     * 事件发生的命名空间，对于注册中心而言，就是实例所在的命名空间
+     */
     private final String namespace;
-    
+
+    /**
+     * 事件发生的分组，对于注册中心而言，就是实例所在分组
+     */
     private final String group;
-    
+
+    /**
+     * 事件的名称，对于注册中心而言，就是实例名称
+     */
     private final String name;
-    
+
     public String getType() {
         return type;
     }
-    
+
     public long getEventTime() {
         return eventTime;
     }
-    
+
     public String getNamespace() {
         return namespace;
     }
-    
+
     public String getGroup() {
         return group;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public TraceEvent(String eventType, long eventTime, String namespace, String group, String name) {
         this.type = eventType;
         this.eventTime = eventTime;

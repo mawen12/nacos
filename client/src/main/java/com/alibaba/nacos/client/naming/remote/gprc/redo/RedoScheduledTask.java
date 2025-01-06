@@ -26,14 +26,22 @@ import com.alibaba.nacos.client.utils.LogUtils;
 import com.alibaba.nacos.common.task.AbstractExecuteTask;
 
 /**
- * Redo task.
+ * 恢复任务，定时检查{@link NamingGrpcRedoService#registeredInstances}，
+ * 其中由
  *
  * @author xiweng.yy
  */
 public class RedoScheduledTask extends AbstractExecuteTask {
-    
+
+    /**
+     * 用于执行rpc请求的客户端代理
+     */
     private final NamingGrpcClientProxy clientProxy;
-    
+
+    /**
+     * 用于获取实例恢复数据，用于构造执行rpc请求的{@link com.alibaba.nacos.api.naming.remote.request.InstanceRequest},
+     * 并且该任务中也会更新实例恢复数据
+     */
     private final NamingGrpcRedoService redoService;
     
     public RedoScheduledTask(NamingGrpcClientProxy clientProxy, NamingGrpcRedoService redoService) {
@@ -43,12 +51,27 @@ public class RedoScheduledTask extends AbstractExecuteTask {
     
     @Override
     public void run() {
+        /**
+         * 如果恢复服务断开链接，代表无法与Nacos Server通信，便跳过该任务
+         */
         if (!redoService.isConnected()) {
             LogUtils.NAMING_LOGGER.warn("Grpc Connection is disconnect, skip current redo task");
             return;
         }
         try {
+            /**
+             * 获取{@link InstanceRedoData#isNeedRedo()}为true的数据，即获取需要执行恢复操作的实例，
+             * 并根据不同的恢复类型执行不同的操作
+             * <ul>
+             *     <li>{@link com.alibaba.nacos.client.naming.remote.gprc.redo.data.RedoData.RedoType.REGISTER}，便发送rpc请求到Nacos Server，执行实例注册</li>
+             *     <li>{@link com.alibaba.nacos.client.naming.remote.gprc.redo.data.RedoData.RedoType.UNREGISTER}, 便发送rpc请求到Nacos Server，执行实例注销</li>
+             *     <li>{@link com.alibaba.nacos.client.naming.remote.gprc.redo.data.RedoData.RedoType.REMOVE}，将该实例从客户端中移除，因为该实例无需再次使用</li>
+             * </ul>
+             */
             redoForInstances();
+            /**
+             *
+             */
             redoForSubscribes();
         } catch (Exception e) {
             LogUtils.NAMING_LOGGER.warn("Redo task run with unexpected exception: ", e);
@@ -56,40 +79,56 @@ public class RedoScheduledTask extends AbstractExecuteTask {
     }
     
     private void redoForInstances() {
+        /**
+         * 获取需要恢复的实例，并取出依次执行恢复操作
+         */
         for (InstanceRedoData each : redoService.findInstanceRedoData()) {
             try {
                 redoForInstance(each);
             } catch (NacosException e) {
-                LogUtils.NAMING_LOGGER.error("Redo instance operation {} for {}@@{} failed. ", each.getRedoType(),
-                        each.getGroupName(), each.getServiceName(), e);
+                LogUtils.NAMING_LOGGER.error("Redo instance operation {} for {}@@{} failed. ", each.getRedoType(), each.getGroupName(), each.getServiceName(), e);
             }
         }
     }
     
     private void redoForInstance(InstanceRedoData redoData) throws NacosException {
+        /**
+         * 获取该实例的恢复类型
+         */
         RedoData.RedoType redoType = redoData.getRedoType();
+        /**
+         * 获取实例的服务名称
+         */
         String serviceName = redoData.getServiceName();
+        /**
+         * 获取分组名称
+         */
         String groupName = redoData.getGroupName();
         LogUtils.NAMING_LOGGER.info("Redo instance operation {} for {}@@{}", redoType, groupName, serviceName);
         switch (redoType) {
             case REGISTER:
+                // 如果客户端已经关闭服务，则跳过该任务
                 if (isClientDisabled()) {
                     return;
                 }
+                // 发送rpc请求到Nacos Server，并更新实例的注册状态
                 processRegisterRedoType(redoData, serviceName, groupName);
                 break;
+
             case UNREGISTER:
+                // 如果客户端已经关闭服务，则跳过该任务
                 if (isClientDisabled()) {
                     return;
                 }
+                // 发送rpc请求到Nacos Server，并更新实例的注销状态
                 clientProxy.doDeregisterService(serviceName, groupName, redoData.get());
                 break;
             case REMOVE:
+                // 将内存中的实例移除
                 redoService.removeInstanceForRedo(serviceName, groupName);
                 break;
             default:
         }
-        
     }
     
     private void processRegisterRedoType(InstanceRedoData redoData, String serviceName, String groupName) throws NacosException {
@@ -99,6 +138,9 @@ public class RedoScheduledTask extends AbstractExecuteTask {
             clientProxy.doBatchRegisterService(serviceName, groupName, batchInstanceRedoData.getInstances());
             return;
         }
+        /**
+         *
+         */
         clientProxy.doRegisterService(serviceName, groupName, redoData.get());
     }
     

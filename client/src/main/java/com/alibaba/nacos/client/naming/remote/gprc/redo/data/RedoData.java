@@ -25,11 +25,11 @@ import java.util.Objects;
  */
 @SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
 public abstract class RedoData<T> {
-    
+
     private final String serviceName;
-    
+
     private final String groupName;
-    
+
     /**
      * Expected states for finally.
      *
@@ -39,79 +39,84 @@ public abstract class RedoData<T> {
      * </ul>
      */
     private volatile boolean expectedRegistered;
-    
+
     /**
      * If {@code true} means cached data has been registered to server successfully.
      */
     private volatile boolean registered;
-    
+
     /**
      * If {@code true} means cached data is unregistering from server.
      */
     private volatile boolean unregistering;
-    
+
     private T data;
-    
+
     protected RedoData(String serviceName, String groupName) {
         this.serviceName = serviceName;
         this.groupName = groupName;
         this.expectedRegistered = true;
     }
-    
+
     public String getServiceName() {
         return serviceName;
     }
-    
+
     public String getGroupName() {
         return groupName;
     }
-    
+
     public void setExpectedRegistered(boolean registered) {
         this.expectedRegistered = registered;
     }
-    
+
     public boolean isExpectedRegistered() {
         return expectedRegistered;
     }
-    
+
     public boolean isRegistered() {
         return registered;
     }
-    
+
     public boolean isUnregistering() {
         return unregistering;
     }
-    
+
     public void setRegistered(boolean registered) {
         this.registered = registered;
     }
-    
+
     public void setUnregistering(boolean unregistering) {
         this.unregistering = unregistering;
     }
-    
+
     public T get() {
         return data;
     }
-    
+
     public void set(T data) {
         this.data = data;
     }
-    
+
     public void registered() {
         this.registered = true;
         this.unregistering = false;
     }
-    
+
     public void unregistered() {
         this.registered = false;
         this.unregistering = true;
     }
-    
+
+    /**
+     * 当前实例恢复数据是否需要执行恢复操作
+     *
+     * @return
+     */
     public boolean isNeedRedo() {
         return !RedoType.NONE.equals(getRedoType());
     }
-    
+
     /**
      * Get redo type for current redo data without expected state.
      *
@@ -126,39 +131,54 @@ public abstract class RedoData<T> {
      */
     public RedoType getRedoType() {
         if (isRegistered() && !isUnregistering()) {
+            /**
+             * 如果已经注册，但是并未注销，则视{@link expectedRegistered}状态，如果为true，代表无需任何操作，否则进行取消注册
+             */
             return expectedRegistered ? RedoType.NONE : RedoType.UNREGISTER;
         } else if (isRegistered() && isUnregistering()) {
+            /**
+             * 如果已经注册，且正在执行注销，则进行取消注册
+             */
             return RedoType.UNREGISTER;
         } else if (!isRegistered() && !isUnregistering()) {
+            /**
+             * 如果为注册过，且未在执行注销，则进行注册
+             */
             return RedoType.REGISTER;
         } else {
+            /**
+             * 未注册过，但正在注销，如果期待注册，则执行注册，否则执行移除
+             */
             return expectedRegistered ? RedoType.REGISTER : RedoType.REMOVE;
         }
     }
-    
+
+    /**
+     * 恢复操作枚举
+     */
     public enum RedoType {
-        
+
         /**
-         * Redo register.
+         * 注册
          */
         REGISTER,
-        
+
         /**
-         * Redo unregister.
+         * 注销
          */
         UNREGISTER,
-        
+
         /**
-         * Redo nothing.
+         * 不做任何事情
          */
         NONE,
-        
+
         /**
-         * Remove redo data.
+         * 从内存中移除特定的实例恢复数据
          */
         REMOVE;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -172,7 +192,7 @@ public abstract class RedoData<T> {
                 .equals(redoData.serviceName) && groupName.equals(redoData.groupName) && Objects
                 .equals(data, redoData.data);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(serviceName, groupName, registered, unregistering, data);

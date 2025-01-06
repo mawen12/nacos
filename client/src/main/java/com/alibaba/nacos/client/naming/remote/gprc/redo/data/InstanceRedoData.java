@@ -19,7 +19,8 @@ package com.alibaba.nacos.client.naming.remote.gprc.redo.data;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 
 /**
- * Redo data for register service instance.
+ * 注册服务实例的恢复数据，用于将本地内存中的数据{@link com.alibaba.nacos.client.naming.remote.gprc.redo.NamingGrpcRedoService#registeredInstances}，
+ * 并通过{@link com.alibaba.nacos.client.naming.remote.gprc.redo.NamingGrpcRedoService#redoExecutor}定期执行。
  *
  * @author xiweng.yy
  */

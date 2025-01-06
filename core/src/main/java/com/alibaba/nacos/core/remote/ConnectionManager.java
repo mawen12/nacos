@@ -117,8 +117,7 @@ public class ConnectionManager {
             
             clientConnectionEventListenerRegistry.notifyClientConnected(connection);
             
-            LOGGER.info("new connection registered successfully, connectionId = {},connection={} ", connectionId,
-                    connection);
+            LOGGER.info("new connection registered successfully, connectionId = {},connection={} ", connectionId, connection);
             return true;
             
         }

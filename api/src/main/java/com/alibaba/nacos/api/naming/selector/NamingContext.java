@@ -21,7 +21,7 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import java.util.List;
 
 /**
- * Naming selector context.
+ * 注册中心选择器上下文，携带实例的相关信息
  *
  * @author lideyou
  */

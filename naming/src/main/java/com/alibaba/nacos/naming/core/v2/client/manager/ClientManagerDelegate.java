@@ -104,6 +104,9 @@ public class ClientManagerDelegate implements ClientManager {
     }
     
     private ClientManager getClientManagerById(String clientId) {
+        /**
+         * 判断是否基于TCP链接的客户端，如果客户端id不包含#，则代表是基于链接；否则客户端id带有false后缀，则使用基于持久化的，否则是临时的
+         */
         if (isConnectionBasedClient(clientId)) {
             return connectionBasedClientManager;
         }

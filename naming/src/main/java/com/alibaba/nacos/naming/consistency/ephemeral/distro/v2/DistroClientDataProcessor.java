@@ -52,6 +52,11 @@ import java.util.Set;
 
 /**
  * Distro processor for v2.
+ * 负责处理客户端相关的变更操作，基于{@code Distro}协议，实现的同步机制。
+ *
+ * @see com.alibaba.nacos.naming.core.v2.event.client.ClientEvent.ClientChangedEvent
+ * @see com.alibaba.nacos.naming.core.v2.event.client.ClientEvent.ClientDisconnectEvent
+ * @see com.alibaba.nacos.naming.core.v2.event.client.ClientEvent.ClientVerifyFailedEvent
  *
  * @author xiweng.yy
  */
@@ -113,14 +118,26 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     }
     
     private void syncToAllServer(ClientEvent event) {
+        /**
+         * 获取目标客户端
+         */
         Client client = event.getClient();
+        /**
+         * 仅处理非空，且临时的，并且由Distro负责处理，否则跳过这个
+         */
         if (isInvalidClient(client)) {
             return;
         }
         if (event instanceof ClientEvent.ClientDisconnectEvent) {
+            /**
+             * 如果是客户端链接断开事件，则使用Distro协议，通知其他节点删除该客户端
+             */
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.DELETE);
         } else if (event instanceof ClientEvent.ClientChangedEvent) {
+            /**
+             * 如果是客户端更新事件，则使用Distro协议，通知其他节点客户端发生变更
+             */
             DistroKey distroKey = new DistroKey(client.getClientId(), TYPE);
             distroProtocol.sync(distroKey, DataOperation.CHANGE);
         }
@@ -141,8 +158,10 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         switch (distroData.getType()) {
             case ADD:
             case CHANGE:
-                ClientSyncData clientSyncData = ApplicationUtils.getBean(Serializer.class)
-                        .deserialize(distroData.getContent(), ClientSyncData.class);
+                /**
+                 * 反序列化{@link DistroData}
+                 */
+                ClientSyncData clientSyncData = ApplicationUtils.getBean(Serializer.class).deserialize(distroData.getContent(), ClientSyncData.class);
                 handlerClientSyncData(clientSyncData);
                 return true;
             case DELETE:

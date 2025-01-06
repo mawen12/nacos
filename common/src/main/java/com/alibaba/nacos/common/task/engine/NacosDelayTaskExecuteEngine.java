@@ -55,8 +55,7 @@ public class NacosDelayTaskExecuteEngine extends AbstractNacosTaskExecuteEngine<
         super(logger);
         tasks = new ConcurrentHashMap<>(initCapacity);
         processingExecutor = ExecutorFactory.newSingleScheduledExecutorService(new NameThreadFactory(name));
-        processingExecutor
-                .scheduleWithFixedDelay(new ProcessRunnable(), processInterval, processInterval, TimeUnit.MILLISECONDS);
+        processingExecutor.scheduleWithFixedDelay(new ProcessRunnable(), processInterval, processInterval, TimeUnit.MILLISECONDS);
     }
     
     @Override
@@ -84,6 +83,9 @@ public class NacosDelayTaskExecuteEngine extends AbstractNacosTaskExecuteEngine<
         lock.lock();
         try {
             AbstractDelayTask task = tasks.get(key);
+            /**
+             * 对于延迟任务来说，
+             */
             if (null != task && task.shouldProcess()) {
                 return tasks.remove(key);
             } else {
@@ -130,20 +132,33 @@ public class NacosDelayTaskExecuteEngine extends AbstractNacosTaskExecuteEngine<
      * process tasks in execute engine.
      */
     protected void processTasks() {
+        /**
+         * 获取所有的key，并依次执行任务
+         */
         Collection<Object> keys = getAllTaskKeys();
         for (Object taskKey : keys) {
             AbstractDelayTask task = removeTask(taskKey);
+            /**
+             * 如果任务为空，则跳过，执行下一个
+             */
             if (null == task) {
                 continue;
             }
+            /**
+             * 根据任务key获取任务处理器
+             */
             NacosTaskProcessor processor = getProcessor(taskKey);
             try {
                 // ReAdd task if process failed
                 if (!processor.process(task)) {
+                    // 任务处理失败，则更新处理时间，并重新加入到集合中
                     retryFailedTask(taskKey, task);
                 }
             } catch (Throwable e) {
                 getEngineLog().error("Nacos task execute error ", e);
+                /**
+                 * 任务处理异常，则更新处理时间，并重新加入到集合中
+                 */
                 retryFailedTask(taskKey, task);
             }
         }

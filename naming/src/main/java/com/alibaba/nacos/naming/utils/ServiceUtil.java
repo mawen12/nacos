@@ -102,6 +102,9 @@ public final class ServiceUtil {
      * @return new service info
      */
     public static ServiceInfo selectInstances(ServiceInfo serviceInfo, String cluster) {
+        /**
+         * 获取所有状态的实例
+         */
         return selectInstances(serviceInfo, cluster, false, false);
     }
     
@@ -140,6 +143,9 @@ public final class ServiceUtil {
      */
     public static ServiceInfo selectInstances(ServiceInfo serviceInfo, String cluster, boolean healthyOnly,
             boolean enableOnly) {
+        /**
+         * 获取指定健康度、活跃度的实例列表
+         */
         return doSelectInstances(serviceInfo, cluster, healthyOnly, enableOnly, null);
     }
     
@@ -188,14 +194,26 @@ public final class ServiceUtil {
             if (serviceMetadata == null) {
                 return;
             }
+            /**
+             * 获取过滤后的实例信息
+             */
             allInstances = filteredResult.getHosts();
+
             int originalTotal = allInstances.size();
-            // filter ips using selector
+            // 使用选择管理器获取选择器
             SelectorManager selectorManager = ApplicationUtils.getBean(SelectorManager.class);
+            /**
+             * 进行实例过滤
+             */
             allInstances = selectorManager.select(serviceMetadata.getSelector(), subscriberIp, allInstances);
+            /**
+             * 将结果更新
+             */
             filteredResult.setHosts(allInstances);
             
-            // will re-compute healthCount
+            /**
+             * 重新计算健康实例的总数
+             */
             long newHealthyCount = healthyCount;
             if (originalTotal != allInstances.size()) {
                 newHealthyCount = 0L;
@@ -210,6 +228,9 @@ public final class ServiceUtil {
             if (threshold < 0) {
                 threshold = 0F;
             }
+            /**
+             * 如果健康比例低于阈值，则需要将当前所有实例都更新为健康，进行保护
+             */
             if ((float) newHealthyCount / allInstances.size() <= threshold) {
                 Loggers.SRV_LOG.warn("protect threshold reached, return all ips, service: {}", filteredResult.getName());
                 filteredResult.setReachProtectionThreshold(true);
@@ -249,21 +270,33 @@ public final class ServiceUtil {
         result.setLastRefTime(System.currentTimeMillis());
         result.setClusters(cluster);
         result.setReachProtectionThreshold(false);
-        Set<String> clusterSets = com.alibaba.nacos.common.utils.StringUtils.isNotBlank(cluster) ? new HashSet<>(
-                Arrays.asList(cluster.split(","))) : new HashSet<>();
+
+        Set<String> clusterSets = com.alibaba.nacos.common.utils.StringUtils.isNotBlank(cluster) ? new HashSet<>(Arrays.asList(cluster.split(","))) : new HashSet<>();
         long healthyCount = 0L;
         // The instance list won't be modified almost time.
         List<com.alibaba.nacos.api.naming.pojo.Instance> filteredInstances = new LinkedList<>();
         // The instance list of all filtered by cluster/enabled condition.
         List<com.alibaba.nacos.api.naming.pojo.Instance> allInstances = new LinkedList<>();
         for (com.alibaba.nacos.api.naming.pojo.Instance ip : serviceInfo.getHosts()) {
+            /**
+             * 实例属于指定集群，且开启了仅接受请求的过滤
+             */
             if (checkCluster(clusterSets, ip) && checkEnabled(enableOnly, ip)) {
+                /**
+                 * 未开启健康过滤，或实例是健康的，则加入到{@link filteredInstances}
+                 */
                 if (!healthyOnly || ip.isHealthy()) {
                     filteredInstances.add(ip);
                 }
+                /**
+                 * 如果实例是健康的，则总数+1
+                 */
                 if (ip.isHealthy()) {
                     healthyCount += 1;
                 }
+                /**
+                 * 加入到所有实例中
+                 */
                 allInstances.add(ip);
             }
         }
@@ -285,18 +318,19 @@ public final class ServiceUtil {
         return !enableOnly || instance.isEnabled();
     }
 
+    /**
+     * 实例过滤器
+     */
     private interface InstancesFilter {
 
         /**
-         * Do customized filtering.
+         * 进行实例过滤
          *
          * @param filteredResult result with instances already been filtered cluster/enabled/healthy
          * @param allInstances   all instances filtered by cluster/enabled
          * @param healthyCount   healthy instances count filtered by cluster/enabled
          */
-        void doFilter(ServiceInfo filteredResult,
-                      List<com.alibaba.nacos.api.naming.pojo.Instance> allInstances,
-                      long healthyCount);
+        void doFilter(ServiceInfo filteredResult, List<com.alibaba.nacos.api.naming.pojo.Instance> allInstances, long healthyCount);
 
     }
 

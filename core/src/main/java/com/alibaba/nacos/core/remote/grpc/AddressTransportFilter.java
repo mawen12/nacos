@@ -54,6 +54,9 @@ public class AddressTransportFilter extends ServerTransportFilter {
         int localPort = localAddress.getPort();
         String remoteIp = remoteAddress.getAddress().getHostAddress();
         Attributes attrWrapper = transportAttrs.toBuilder()
+                /**
+                 * conn_id构造格式：currentTime_remoteIp_remotePort
+                 */
                 .set(ATTR_TRANS_KEY_CONN_ID, System.currentTimeMillis() + "_" + remoteIp + "_" + remotePort)
                 .set(ATTR_TRANS_KEY_REMOTE_IP, remoteIp).set(ATTR_TRANS_KEY_REMOTE_PORT, remotePort)
                 .set(ATTR_TRANS_KEY_LOCAL_PORT, localPort).build();

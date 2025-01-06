@@ -52,15 +52,27 @@ public class ServiceInfo {
     private static final String EMPTY = "";
     
     private static final String DEFAULT_CHARSET = "UTF-8";
-    
+
+    /**
+     * 服务名称
+     */
     private String name;
-    
+
+    /**
+     * 分组名称
+     */
     private String groupName;
-    
+
+    /**
+     * 集群名称
+     */
     private String clusters;
-    
+
     private long cacheMillis = 1000L;
-    
+
+    /**
+     * 服务下的实例列表
+     */
     private List<Instance> hosts = new ArrayList<>();
     
     private long lastRefTime = 0L;

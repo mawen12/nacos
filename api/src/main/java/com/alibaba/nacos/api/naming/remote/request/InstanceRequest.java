@@ -17,16 +17,29 @@
 package com.alibaba.nacos.api.naming.remote.request;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.api.naming.remote.NamingRemoteConstants;
 
 /**
- * Nacos instances request.
+ * Nacos实例请求
  *
+ * @see com.alibaba.nacos.api.naming.remote.response.InstanceResponse
+ * @see com.alibaba.nacos.naming.remote.rpc.handler.InstanceRequestHandler
  * @author xiweng.yy
  */
 public class InstanceRequest extends AbstractNamingRequest {
-    
+
+    /**
+     * 请求类型，选择范围为：
+     * <ul>
+     *     <li>{@link NamingRemoteConstants#REGISTER_INSTANCE}注册服务</li>
+     *     <li>{@link NamingRemoteConstants#DE_REGISTER_INSTANCE}注销服务</li>
+     * </ul>
+     */
     private String type;
-    
+
+    /**
+     * 实例信息
+     */
     private Instance instance;
     
     public InstanceRequest() {

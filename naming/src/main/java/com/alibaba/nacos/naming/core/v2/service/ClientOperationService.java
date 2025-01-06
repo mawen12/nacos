@@ -86,7 +86,7 @@ public interface ClientOperationService {
     }
     
     /**
-     * get publish info.
+     * 使用实例信息构造实例发布信息
      *
      * @param instance {@link Instance}
      * @return {@link InstancePublishInfo}
@@ -94,21 +94,41 @@ public interface ClientOperationService {
     default InstancePublishInfo getPublishInfo(Instance instance) {
         InstancePublishInfo result = new InstancePublishInfo(instance.getIp(), instance.getPort());
         Map<String, Object> extendDatum = result.getExtendDatum();
+        /**
+         * 如果实例信息不为空，则写入到实例发布信息
+         */
         if (null != instance.getMetadata() && !instance.getMetadata().isEmpty()) {
             extendDatum.putAll(instance.getMetadata());
         }
+        /**
+         * 如果实例id不为空，则加入到扩展属性中，key为customInstanceId
+         */
         if (StringUtils.isNotEmpty(instance.getInstanceId())) {
             extendDatum.put(Constants.CUSTOM_INSTANCE_ID, instance.getInstanceId());
         }
+        /**
+         * 如果不是默认权重(1.0)，则加入到扩展属性中，key为publishInstanceWeight
+         */
         if (Constants.DEFAULT_INSTANCE_WEIGHT != instance.getWeight()) {
             extendDatum.put(Constants.PUBLISH_INSTANCE_WEIGHT, instance.getWeight());
         }
+        /**
+         * 如果实例未启动，则加入到扩展属性中，key为publishInstanceEnable
+         */
         if (!instance.isEnabled()) {
             extendDatum.put(Constants.PUBLISH_INSTANCE_ENABLE, instance.isEnabled());
         }
-        String clusterName = StringUtils.isBlank(instance.getClusterName()) ? UtilsAndCommons.DEFAULT_CLUSTER_NAME
-                : instance.getClusterName();
+        /**
+         * 构造命名空间，如果实例未携带，则取默认值：DEFAULT
+         */
+        String clusterName = StringUtils.isBlank(instance.getClusterName()) ? UtilsAndCommons.DEFAULT_CLUSTER_NAME : instance.getClusterName();
+        /**
+         * 写入实例发布信息的健康状态
+         */
         result.setHealthy(instance.isHealthy());
+        /**
+         * 写入实例的集群信息
+         */
         result.setCluster(clusterName);
         return result;
     }

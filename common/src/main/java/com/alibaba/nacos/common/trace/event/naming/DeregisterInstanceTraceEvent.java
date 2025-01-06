@@ -19,14 +19,17 @@ package com.alibaba.nacos.common.trace.event.naming;
 import com.alibaba.nacos.common.trace.DeregisterInstanceReason;
 
 /**
- * Naming deregister instance trace event.
+ * 注册中心注销实例追踪事件
  *
  * @author yanda
  */
 public class DeregisterInstanceTraceEvent extends NamingTraceEvent {
     
     private static final long serialVersionUID = 3850573686472190256L;
-    
+
+    /**
+     * 发起
+     */
     private final String clientIp;
     
     private final boolean rpc;

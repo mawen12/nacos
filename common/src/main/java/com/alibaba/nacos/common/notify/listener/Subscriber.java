@@ -21,7 +21,7 @@ import com.alibaba.nacos.common.notify.Event;
 import java.util.concurrent.Executor;
 
 /**
- * An abstract subscriber class for subscriber interface.
+ * 代表订阅者接口的抽象订阅类
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  * @author zongtanghu
@@ -30,21 +30,21 @@ import java.util.concurrent.Executor;
 public abstract class Subscriber<T extends Event> {
     
     /**
-     * Event callback.
+     * 事件回调
      *
      * @param event {@link Event}
      */
     public abstract void onEvent(T event);
     
     /**
-     * Type of this subscriber's subscription.
+     * 订阅者类型
      *
      * @return Class which extends {@link Event}
      */
     public abstract Class<? extends Event> subscribeType();
     
     /**
-     * It is up to the listener to determine whether the callback is asynchronous or synchronous.
+     * 由订阅者提供的执行器，确定监听是同步还是异步的
      *
      * @return {@link Executor}
      */
@@ -53,7 +53,7 @@ public abstract class Subscriber<T extends Event> {
     }
     
     /**
-     * Whether to ignore expired events.
+     * 是否忽略过期事件
      *
      * @return default value is {@link Boolean#FALSE}
      */
@@ -64,6 +64,8 @@ public abstract class Subscriber<T extends Event> {
     /**
      * Whether the event's scope matches current subscriber. Default implementation is all scopes matched.
      * If you override this method, it better to override related {@link com.alibaba.nacos.common.notify.Event#scope()}.
+     *
+     * 事件范围是否匹配当前订阅者，默认是全部匹配。
      *
      * @param event {@link Event}
      * @return Whether the event's scope matches current subscriber

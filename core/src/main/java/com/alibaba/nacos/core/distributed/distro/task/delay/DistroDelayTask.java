@@ -21,7 +21,7 @@ import com.alibaba.nacos.consistency.DataOperation;
 import com.alibaba.nacos.core.distributed.distro.entity.DistroKey;
 
 /**
- * Distro delay task.
+ * Distro 延迟任务
  *
  * @author xiweng.yy
  */

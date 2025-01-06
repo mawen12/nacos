@@ -68,22 +68,40 @@ public class NamingUtils {
     }
     
     public static String getServiceName(final String serviceNameWithGroup) {
+        /**
+         * 如果服务名称为空，则返回空
+         */
         if (StringUtils.isBlank(serviceNameWithGroup)) {
             return StringUtils.EMPTY;
         }
+        /**
+         * 如果服务名称中不包含@@，则直接返回
+         */
         if (!serviceNameWithGroup.contains(Constants.SERVICE_INFO_SPLITER)) {
             return serviceNameWithGroup;
         }
+        /**
+         * 对服务名称进行拆分，因为其格式为{@code group@@name}，取{@code name}
+         */
         return serviceNameWithGroup.split(Constants.SERVICE_INFO_SPLITER)[1];
     }
     
     public static String getGroupName(final String serviceNameWithGroup) {
+        /**
+         * 如果服务名称为空，则返回空
+         */
         if (StringUtils.isBlank(serviceNameWithGroup)) {
             return StringUtils.EMPTY;
         }
+        /**
+         * 如果服务名称中不包含@@，则返回默认值DEFAULT_GROUP
+         */
         if (!serviceNameWithGroup.contains(Constants.SERVICE_INFO_SPLITER)) {
             return Constants.DEFAULT_GROUP;
         }
+        /**
+         * 对服务名称进行拆分，因为其格式为{@code group@@name}，取{@code group}
+         */
         return serviceNameWithGroup.split(Constants.SERVICE_INFO_SPLITER)[0];
     }
     
@@ -148,19 +166,27 @@ public class NamingUtils {
      * @throws NacosException if check failed, throw exception
      */
     public static void checkInstanceIsLegal(Instance instance) throws NacosException {
+        /**
+         * 校验实例信息不能为空
+         */
         if (null == instance) {
-            throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.INSTANCE_ERROR,
-                    "Instance can not be null.");
+            throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.INSTANCE_ERROR, "Instance can not be null.");
         }
+        /**
+         * 当前实例的心跳超时时间必须大于心跳间隔，
+         * 并且实例ip删除超时必须大于实例心跳间隔
+         *
+         */
         if (instance.getInstanceHeartBeatTimeOut() < instance.getInstanceHeartBeatInterval()
                 || instance.getIpDeleteTimeout() < instance.getInstanceHeartBeatInterval()) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.INSTANCE_ERROR,
                     "Instance 'heart beat interval' must less than 'heart beat timeout' and 'ip delete timeout'.");
         }
+        /**
+         * 实例所在集群集群名称不能为空，且集群名称合法
+         */
         if (!StringUtils.isEmpty(instance.getClusterName()) && !CLUSTER_NAME_PATTERN.matcher(instance.getClusterName()).matches()) {
-            throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.INSTANCE_ERROR,
-                    String.format("Instance 'clusterName' should be characters with only 0-9a-zA-Z-. (current: %s)",
-                            instance.getClusterName()));
+            throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.INSTANCE_ERROR, String.format("Instance 'clusterName' should be characters with only 0-9a-zA-Z-. (current: %s)", instance.getClusterName()));
         }
     }
     

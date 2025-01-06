@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Nacos naming metadata manager.
+ * Nacos注册中心元数据管理器，负责管理服务及其元信息{@link ServiceMetadata}、实例元信息{@link InstanceMetadata}
  *
  * @author xiweng.yy
  */
@@ -44,9 +44,15 @@ import java.util.concurrent.ConcurrentMap;
 public class NamingMetadataManager extends SmartSubscriber {
     
     private final Set<ExpiredMetadataInfo> expiredMetadataInfos;
-    
+
+    /**
+     * Map<服务信息, 服务元信息>
+     */
     private ConcurrentMap<Service, ServiceMetadata> serviceMetadataMap;
-    
+
+    /**
+     * Map<服务信息, Map<元信息Id, 实例元信息>>
+     */
     private ConcurrentMap<Service, ConcurrentMap<String, InstanceMetadata>> instanceMetadataMap;
     
     private static final int INITIAL_CAPACITY = 1;

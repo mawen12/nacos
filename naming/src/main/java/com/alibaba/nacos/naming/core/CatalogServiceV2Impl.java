@@ -67,35 +67,60 @@ public class CatalogServiceV2Impl implements CatalogService {
         this.serviceStorage = serviceStorage;
         this.metadataManager = metadataManager;
     }
-    
+
+    /**
+     * 返回指定命名空间下服务的服务信息、服务元信息、服务下的集群信息
+     *
+     * @param namespaceId namespace id of service
+     * @param groupName   group name of service
+     * @param serviceName service name
+     * @return
+     * @throws NacosException
+     */
     @Override
     public Object getServiceDetail(String namespaceId, String groupName, String serviceName) throws NacosException {
+        /**
+         * 构建服务
+         */
         Service service = Service.newService(namespaceId, groupName, serviceName);
+        /**
+         * 如果服务管理器中不存在对应服务，则代表服务不存在
+         */
         if (!ServiceManager.getInstance().containSingleton(service)) {
-            throw new NacosException(NacosException.NOT_FOUND,
-                    String.format("service %s@@%s is not found!", groupName, serviceName));
+            throw new NacosException(NacosException.NOT_FOUND, String.format("service %s@@%s is not found!", groupName, serviceName));
         }
-        
+        /**
+         * 获取服务的元数据，如果不存在，就创建一个
+         */
         Optional<ServiceMetadata> metadata = metadataManager.getServiceMetadata(service);
         ServiceMetadata detailedService = metadata.orElseGet(ServiceMetadata::new);
-        
+
         ObjectNode serviceObject = JacksonUtils.createEmptyJsonNode();
+        // 服务
         serviceObject.put(FieldsConstants.NAME, serviceName);
+        // 分组
         serviceObject.put(FieldsConstants.GROUP_NAME, groupName);
+        // 服务保护阈值
         serviceObject.put(FieldsConstants.PROTECT_THRESHOLD, detailedService.getProtectThreshold());
+        // 服务选择器
         serviceObject.replace(FieldsConstants.SELECTOR, JacksonUtils.transferToJsonNode(detailedService.getSelector()));
-        serviceObject.replace(FieldsConstants.METADATA,
-                JacksonUtils.transferToJsonNode(detailedService.getExtendData()));
+        // 服务元信息
+        serviceObject.replace(FieldsConstants.METADATA, JacksonUtils.transferToJsonNode(detailedService.getExtendData()));
         
         ObjectNode detailView = JacksonUtils.createEmptyJsonNode();
+        // 服务对象
         detailView.replace(FieldsConstants.SERVICE, serviceObject);
         
         List<com.alibaba.nacos.api.naming.pojo.Cluster> clusters = new ArrayList<>();
-        
+
+        /**
+         * 获取服务下的所有集群名称
+         */
         for (String each : serviceStorage.getClusters(service)) {
-            ClusterMetadata clusterMetadata =
-                    detailedService.getClusters().containsKey(each) ? detailedService.getClusters().get(each)
-                            : new ClusterMetadata();
+            /**
+             * 获取对应的元数据信息
+             */
+            ClusterMetadata clusterMetadata = detailedService.getClusters().containsKey(each) ? detailedService.getClusters().get(each) : new ClusterMetadata();
             com.alibaba.nacos.api.naming.pojo.Cluster clusterView = new Cluster();
             clusterView.setName(each);
             clusterView.setHealthChecker(clusterMetadata.getHealthChecker());
@@ -106,24 +131,40 @@ public class CatalogServiceV2Impl implements CatalogService {
             clusterView.setServiceName(service.getGroupedServiceName());
             clusters.add(clusterView);
         }
-        
+
+        /**
+         * 服务集群信息
+         */
         detailView.replace(FieldsConstants.CLUSTERS, JacksonUtils.transferToJsonNode(clusters));
         
         return detailView;
     }
     
     @Override
-    public List<? extends Instance> listInstances(String namespaceId, String groupName, String serviceName,
-            String clusterName) throws NacosException {
+    public List<? extends Instance> listInstances(String namespaceId, String groupName, String serviceName, String clusterName) throws NacosException {
+        /**
+         * 构建服务
+         */
         Service service = Service.newService(namespaceId, groupName, serviceName);
+        /**
+         * 如果服务管理器中不存在对应服务，则代表服务不存在
+         */
         if (!ServiceManager.getInstance().containSingleton(service)) {
-            throw new NacosException(NacosException.NOT_FOUND,
-                    String.format("service %s@@%s is not found!", groupName, serviceName));
+            throw new NacosException(NacosException.NOT_FOUND, String.format("service %s@@%s is not found!", groupName, serviceName));
         }
+        /**
+         * 如果服务下不存在对应的集群名称，则代表指定集群不存在
+         */
         if (!serviceStorage.getClusters(service).contains(clusterName)) {
             throw new NacosException(NacosException.NOT_FOUND, "cluster " + clusterName + " is not found!");
         }
+        /**
+         * 获取服务的服务信息，其中包含实例列表
+         */
         ServiceInfo serviceInfo = serviceStorage.getData(service);
+        /**
+         * 从{@link ServiceInfo#hosts}中过滤匹配指定集群的实例
+         */
         ServiceInfo result = ServiceUtil.selectInstances(serviceInfo, clusterName);
         return result.getHosts();
     }
@@ -145,10 +186,15 @@ public class CatalogServiceV2Impl implements CatalogService {
             String instancePattern, boolean ignoreEmptyService) throws NacosException {
         ObjectNode result = JacksonUtils.createEmptyJsonNode();
         List<ServiceView> serviceViews = new LinkedList<>();
+        /**
+         * 从{@link ServiceManager#namespaceSingletonMaps}获取匹配特定命名空间、分组名称和服务名称
+         */
         Collection<Service> services = patternServices(namespaceId, groupName, serviceName);
+        /**
+         * 是否忽略空服务（即其下没有任何的实例）
+         */
         if (ignoreEmptyService) {
-            services = services.stream().filter(each -> 0 != serviceStorage.getData(each).ipCount())
-                    .collect(Collectors.toList());
+            services = services.stream().filter(each -> 0 != serviceStorage.getData(each).ipCount()).collect(Collectors.toList());
         }
         result.put(FieldsConstants.COUNT, services.size());
         services = doPage(services, pageNo - 1, pageSize);
@@ -226,16 +272,26 @@ public class CatalogServiceV2Impl implements CatalogService {
     }
     
     private Collection<Service> patternServices(String namespaceId, String group, String serviceName) {
+        /**
+         * 如果服务名称和分组名称均为空，代表不进行过滤，直接查询该租户下所有的服务
+         */
         boolean noFilter = StringUtils.isBlank(serviceName) && StringUtils.isBlank(group);
         if (noFilter) {
             return ServiceManager.getInstance().getSingletons(namespaceId);
         }
         Collection<Service> result = new LinkedList<>();
+        /**
+         * 分组+服务名称 -> 正则表达式
+         */
         StringJoiner regex = new StringJoiner(Constants.SERVICE_INFO_SPLITER);
         regex.add(getRegexString(group));
         regex.add(getRegexString(serviceName));
         String regexString = regex.toString();
+
         for (Service each : ServiceManager.getInstance().getSingletons(namespaceId)) {
+            /**
+             * 如果格式匹配，则加入到结果中
+             */
             if (each.getGroupedServiceName().matches(regexString)) {
                 result.add(each);
             }

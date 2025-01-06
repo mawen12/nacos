@@ -17,7 +17,7 @@
 package com.alibaba.nacos.client.selector;
 
 /**
- * Listener invoker.
+ * 监听器调用器
  *
  * @param <E> the type of event received by the listener
  * @author lideyou
@@ -25,7 +25,7 @@ package com.alibaba.nacos.client.selector;
 public interface ListenerInvoker<E> {
     
     /**
-     * Invoke inner listener.
+     * 将事件通知到监听器
      *
      * @param event event
      */

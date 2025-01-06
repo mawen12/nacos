@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service metadata for v2.
+ * 服务元信息v2
  *
  * @author xiweng.yy
  */
@@ -34,22 +34,28 @@ public class ServiceMetadata implements Serializable {
     private static final long serialVersionUID = -6605609934135069566L;
     
     /**
-     * Service is ephemeral or persistence.
+     * 服务是临时还是持久化的
      */
     private boolean ephemeral = true;
     
     /**
-     * protect threshold.
+     * 服务保护阈值
      */
     private float protectThreshold = 0.0F;
     
     /**
-     * Type of {@link Selector}.
+     * 服务的选择器
      */
     private Selector selector = new NoneSelector();
-    
+
+    /**
+     * 服务的扩展属性
+     */
     private Map<String, String> extendData = new ConcurrentHashMap<>(1);
-    
+
+    /**
+     * 服务的集群辕信息
+     */
     private Map<String, ClusterMetadata> clusters = new ConcurrentHashMap<>(1);
     
     public boolean isEphemeral() {

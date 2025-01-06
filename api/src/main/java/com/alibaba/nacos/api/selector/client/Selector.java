@@ -17,7 +17,7 @@
 package com.alibaba.nacos.api.selector.client;
 
 /**
- * Client selector.
+ * 客户端选择器
  *
  * @param <C> the type of selector context
  * @param <E> the type of select result
@@ -26,7 +26,7 @@ package com.alibaba.nacos.api.selector.client;
 public interface Selector<C, E> {
     
     /**
-     * select the target result.
+     * 选择目标结果
      *
      * @param context selector context
      * @return select result

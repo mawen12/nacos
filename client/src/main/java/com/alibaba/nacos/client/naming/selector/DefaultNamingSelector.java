@@ -27,12 +27,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * Default naming selector.
+ * 默认的注册中心过滤器
  *
  * @author lideyou
  */
 public class DefaultNamingSelector implements NamingSelector {
-    
+    /**
+     * 过滤实例的条件
+     */
     private final Predicate<Instance> filter;
     
     public DefaultNamingSelector(Predicate<Instance> filter) {
@@ -41,12 +43,20 @@ public class DefaultNamingSelector implements NamingSelector {
     
     @Override
     public NamingResult select(NamingContext context) {
+        /**
+         * 获取过滤后的实例列表
+         */
         List<Instance> instances = doFilter(context.getInstances());
+        /**
+         * 返回
+         */
         return () -> instances;
     }
     
     private List<Instance> doFilter(List<Instance> instances) {
-        return instances == null ? Collections.emptyList()
-                : instances.stream().filter(filter).collect(Collectors.toList());
+        /**
+         * 使用Stream执行过滤
+         */
+        return instances == null ? Collections.emptyList() : instances.stream().filter(filter).collect(Collectors.toList());
     }
 }

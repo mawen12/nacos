@@ -37,12 +37,12 @@ public class Cluster implements Serializable {
     private static final long serialVersionUID = -7196138840047197271L;
     
     /**
-     * Name of belonging service.
+     * 所属的服务名称
      */
     private String serviceName;
     
     /**
-     * Name of cluster.
+     * 集群名称，默认为DEFAULT
      */
     private String name;
     

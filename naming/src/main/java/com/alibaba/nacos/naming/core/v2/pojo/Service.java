@@ -24,24 +24,43 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Service POJO for Nacos v2.
+ * 代表Nacos v2的服务实例对象，使用namespace+group+name构成唯一性
+ * 这就代表了微服务中的服务。一个服务可以有多个实例。
  *
  * @author xiweng.yy
  */
 public class Service implements Serializable {
     
     private static final long serialVersionUID = -990509089519499344L;
-    
+
+    /**
+     * 服务命名空间
+     */
     private final String namespace;
-    
+
+    /**
+     * 服务所属分组
+     */
     private final String group;
-    
+
+    /**
+     * 服务名称
+     */
     private final String name;
-    
+
+    /**
+     *
+     */
     private final boolean ephemeral;
-    
+
+    /**
+     * 该服务信息累计变更次数，由{@link com.alibaba.nacos.naming.core.v2.event.metadata.MetadataEvent.ServiceMetadataEvent}触发更新
+     */
     private final AtomicLong revision;
-    
+
+    /**
+     * 服务最后更新时间，由{@link com.alibaba.nacos.naming.core.v2.event.metadata.MetadataEvent.ServiceMetadataEvent}触发更新
+     */
     private long lastUpdatedTime;
     
     private Service(String namespace, String group, String name, boolean ephemeral) {
@@ -92,11 +111,19 @@ public class Service implements Serializable {
     public void incrementRevision() {
         revision.incrementAndGet();
     }
-    
+
+    /**
+     * 返回带有分组的服务名称，格式为：{@code group@@name}
+     * @return
+     */
     public String getGroupedServiceName() {
         return NamingUtils.getGroupedName(name, group);
     }
 
+    /**
+     * 返回带有命名空间和分组的服务名称，格式为：{@code namespace@@group@@name}
+     * @return
+     */
     public String getNameSpaceGroupedServiceName() {
         //do not String.intern
         return namespace + Constants.SERVICE_INFO_SPLITER + NamingUtils.getGroupedName(name, group);

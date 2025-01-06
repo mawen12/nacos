@@ -23,7 +23,7 @@ import com.alibaba.nacos.client.naming.event.InstancesDiff;
 import java.util.List;
 
 /**
- * Naming Event with instance change information.
+ * 包含实例变更信息的注册中心事件
  *
  * @author lideyou
  */

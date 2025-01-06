@@ -39,7 +39,8 @@ public class ClientEvent extends Event {
     }
     
     /**
-     * Client changed event. Happened when {@code Client} add or remove service.
+     * 客户端变更事件，当客户端新增或移除服务时触发
+     * @see com.alibaba.nacos.naming.consistency.ephemeral.distro.v2.DistroClientDataProcessor
      */
     public static class ClientChangedEvent extends ClientEvent {
         

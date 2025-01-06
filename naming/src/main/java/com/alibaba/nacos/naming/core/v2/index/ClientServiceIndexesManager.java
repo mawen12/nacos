@@ -40,13 +40,21 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Client and service index manager.
  *
+ * {@link Client}和{@link Service}索引管理器
+ *
  * @author xiweng.yy
  */
 @Component
 public class ClientServiceIndexesManager extends SmartSubscriber {
-    
+
+    /**
+     * Map<服务信息, 发布该服务的客户端Id集合>
+     */
     private final ConcurrentMap<Service, Set<String>> publisherIndexes = new ConcurrentHashMap<>();
-    
+
+    /**
+     * Map<服务信息, 订阅该服务的客户端Id集合>
+     */
     private final ConcurrentMap<Service, Set<String>> subscriberIndexes = new ConcurrentHashMap<>();
     
     public ClientServiceIndexesManager() {
@@ -128,7 +136,13 @@ public class ClientServiceIndexesManager extends SmartSubscriber {
     }
     
     private void addPublisherIndexes(Service service, String clientId) {
+        /**
+         * 将客户端id写入发布索引
+         */
         publisherIndexes.computeIfAbsent(service, key -> new ConcurrentHashSet<>()).add(clientId);
+        /**
+         * 发布服务变更事件，由定时任务取出任务处理，通知该服务所有的订阅者
+         */
         NotifyCenter.publishEvent(new ServiceEvent.ServiceChangedEvent(service, true));
     }
     

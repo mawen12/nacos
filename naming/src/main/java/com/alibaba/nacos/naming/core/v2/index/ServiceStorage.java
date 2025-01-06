@@ -42,22 +42,45 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Service storage.
+ * 服务存储，保存了注册中心中服务所有的相关信息，信息构成如下：
+ * <ul>
+ *     <lu>客户端服务索引</lu>
+ *     <lu>客户端管理</lu>
+ *     <lu>元信息管理</lu>
+ *     <lu>服务数据索引</lu>
+ *     <lu>服务集群索引</lu>
+ * </ul>
  *
  * @author xiweng.yy
  */
 @Component
 public class ServiceStorage {
-    
+
+    /**
+     * 管理{@link Client}和{@link Service}
+     */
     private final ClientServiceIndexesManager serviceIndexesManager;
-    
+
+    /**
+     * 管理{@link Client}
+     */
     private final ClientManager clientManager;
     
     private final SwitchDomain switchDomain;
-    
+
+    /**
+     * 管理{@link }
+     */
     private final NamingMetadataManager metadataManager;
-    
+
+    /**
+     * Map<服务, 服务信息>
+     */
     private final ConcurrentMap<Service, ServiceInfo> serviceDataIndexes;
-    
+
+    /**
+     * Map<服务, 归属服务下的集群名称列表>
+     */
     private final ConcurrentMap<Service, Set<String>> serviceClusterIndex;
     
     public ServiceStorage(ClientServiceIndexesManager serviceIndexesManager, ClientManagerDelegate clientManager,

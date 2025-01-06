@@ -27,241 +27,241 @@ import com.alibaba.nacos.api.selector.AbstractSelector;
 import java.util.List;
 
 /**
- * Naming Service.
+ * 注册中心服务
  *
  * @author nkorange
  */
 public interface NamingService {
     
     /**
-     * register an instance to service.
+     * 将一个实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param ip          instance ip
-     * @param port        instance port
+     * @param serviceName 服务名称
+     * @param ip          实例ip
+     * @param port        实例端口
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, String ip, int port) throws NacosException;
     
     /**
-     * register an instance to service.
+     * 将一个实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param ip          instance ip
-     * @param port        instance port
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param ip          实例ip
+     * @param port        实例端口
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, String groupName, String ip, int port) throws NacosException;
     
     /**
-     * register an instance to service with specified cluster name.
+     * 将一个带有特定集群名称的实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param ip          instance ip
-     * @param port        instance port
-     * @param clusterName instance cluster name
+     * @param serviceName 服务名称
+     * @param ip          实例ip
+     * @param port        实例端口
+     * @param clusterName 实例集群名称
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, String ip, int port, String clusterName) throws NacosException;
     
     /**
-     * register an instance to service with specified cluster name.
+     * 将一个带有特定集群名称的实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param ip          instance ip
-     * @param port        instance port
-     * @param clusterName instance cluster name
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param ip          实例ip
+     * @param port        实例端口
+     * @param clusterName 实例集群名称
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, String groupName, String ip, int port, String clusterName)
             throws NacosException;
     
     /**
-     * register an instance to service with specified instance properties.
+     * 将一个带有特定属性的实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param instance    instance to register
+     * @param serviceName 服务名称
+     * @param instance    服务实例
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, Instance instance) throws NacosException;
     
     /**
-     * register an instance to service with specified instance properties.
+     * 将一个带有特定属性的实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param instance    instance to register
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param instance    服务实例
      * @throws NacosException nacos exception
      */
     void registerInstance(String serviceName, String groupName, Instance instance) throws NacosException;
     
     /**
-     * batch register instance to service with specified instance properties.
+     * 将一批带有特定属性的实例注册到Nacos
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param instances   instances to register
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param instances   服务实例列表
      * @throws NacosException nacos exception
      * @since 2.1.1
      */
     void batchRegisterInstance(String serviceName, String groupName, List<Instance> instances) throws NacosException;
     
     /**
-     * batch deRegister instance to service with specified instance properties.
+     * 从Nacos中一批特定实例注销
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param instances   instances to deRegister
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param instances   服务实例列表
      * @throws NacosException nacos exception
      * @since 2.2.0
      */
     void batchDeregisterInstance(String serviceName, String groupName, List<Instance> instances) throws NacosException;
     
     /**
-     * deregister instance from a service.
+     * 从Nacos中注销实例
      *
-     * @param serviceName name of service
-     * @param ip          instance ip
-     * @param port        instance port
+     * @param serviceName 服务名称
+     * @param ip          实例ip
+     * @param port        实例端口
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, String ip, int port) throws NacosException;
     
     /**
-     * deregister instance from a service.
+     * 从Nacos中注销实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param ip          instance ip
-     * @param port        instance port
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param ip          实例ip
+     * @param port        实例端口
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, String groupName, String ip, int port) throws NacosException;
     
     /**
-     * deregister instance with specified cluster name from a service.
+     * 从Nacos中注销一批指定集群的实例
      *
-     * @param serviceName name of service
-     * @param ip          instance ip
-     * @param port        instance port
-     * @param clusterName instance cluster name
+     * @param serviceName 服务名称
+     * @param ip          实例ip
+     * @param port        实例端口
+     * @param clusterName 集群名称
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, String ip, int port, String clusterName) throws NacosException;
     
     /**
-     * deregister instance with specified cluster name from a service.
+     * 从Nacos中注销指定集群的实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param ip          instance ip
-     * @param port        instance port
-     * @param clusterName instance cluster name
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param ip          实例ip
+     * @param port        实例端口
+     * @param clusterName 集群名称
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, String groupName, String ip, int port, String clusterName)
             throws NacosException;
     
     /**
-     * deregister instance with full instance information and default groupName.
+     * 从Nacos中注销实例
      *
-     * @param serviceName name of service
-     * @param instance    instance
+     * @param serviceName 服务名称
+     * @param instance    实例信息
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, Instance instance) throws NacosException;
     
     /**
-     * deregister instance with full instance information.
+     * 从Nacos中注销实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param instance    instance information
+     * @param serviceName 服务名称
+     * @param groupName   分组名称
+     * @param instance    实例信息
      * @throws NacosException nacos exception
      */
     void deregisterInstance(String serviceName, String groupName, Instance instance) throws NacosException;
     
     /**
-     * get all instances of a service.
+     * 获取指定服务的所有实例
      *
-     * @param serviceName name of service
+     * @param serviceName 服务名称
      * @return A list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName) throws NacosException;
     
     /**
-     * get all instances of a service.
+     * 获取指定服务的所有实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
+     * @param serviceName 服务名称
+     * @param groupName   分组名称
      * @return A list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, String groupName) throws NacosException;
     
     /**
-     * Get all instances of a service.
+     * 获取指定服务的所有实例
      *
-     * @param serviceName name of service
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param subscribe   是否订阅该服务
      * @return A list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, boolean subscribe) throws NacosException;
     
     /**
-     * Get all instances of a service.
+     * 获取指定服务的所有实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param groupName   分组名称
+     * @param subscribe   是否订阅该服务
      * @return A list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, String groupName, boolean subscribe) throws NacosException;
     
     /**
-     * Get all instances within specified clusters of a service.
+     * 获取指定服务指定集群的所有实例
      *
-     * @param serviceName name of service
-     * @param clusters    list of cluster
+     * @param serviceName 服务名称
+     * @param clusters    集群名称列表
      * @return A list of qualified instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, List<String> clusters) throws NacosException;
     
     /**
-     * Get all instances within specified clusters of a service.
+     * 获取指定服务指定集群的所有实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param clusters    list of cluster
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param clusters    集群名称列表
      * @return A list of qualified instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, String groupName, List<String> clusters) throws NacosException;
     
     /**
-     * Get all instances within specified clusters of a service.
+     * 获取指定服务指定集群的所有实例
      *
-     * @param serviceName name of service
-     * @param clusters    list of cluster
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param clusters    集群名称列表
+     * @param subscribe   是否订阅该服务
      * @return A list of qualified instance
      * @throws NacosException nacos exception
      */
     List<Instance> getAllInstances(String serviceName, List<String> clusters, boolean subscribe) throws NacosException;
     
     /**
-     * Get all instances within specified clusters of a service.
+     * 获取指定服务指定集群的所有实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param clusters    list of cluster
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param clusters    集群名称列表
+     * @param subscribe   是否订阅该服务
      * @return A list of qualified instance
      * @throws NacosException nacos exception
      */
@@ -269,44 +269,44 @@ public interface NamingService {
             throws NacosException;
     
     /**
-     * Get qualified instances of service.
+     * 获取特定服务的实例
      *
-     * @param serviceName name of service.
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
+     * @param serviceName 服务名称
+     * @param healthy     服务状态是否健康
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> selectInstances(String serviceName, boolean healthy) throws NacosException;
     
     /**
-     * Get qualified instances of service.
+     * 获取特定服务的实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param healthy     服务状态是否健康
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> selectInstances(String serviceName, String groupName, boolean healthy) throws NacosException;
     
     /**
-     * Get qualified instances of service.
+     * 获取特定服务的实例
      *
-     * @param serviceName name of service
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param healthy     服务状态是否健康
+     * @param subscribe   是否订阅该服务
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> selectInstances(String serviceName, boolean healthy, boolean subscribe) throws NacosException;
     
     /**
-     * Get qualified instances of service.
+     * 获取特定服务的实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
-     * @param subscribe   if subscribe the service
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param healthy     服务状态是否健康
+     * @param subscribe   是否订阅该服务
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
@@ -314,23 +314,23 @@ public interface NamingService {
             throws NacosException;
     
     /**
-     * Get qualified instances within specified clusters of service.
+     * 获取特定服务特定集群的实例
      *
-     * @param serviceName name of service
-     * @param clusters    list of cluster
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
+     * @param serviceName 服务名称
+     * @param clusters    集群名称列表
+     * @param healthy     服务状态是否健康
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
     List<Instance> selectInstances(String serviceName, List<String> clusters, boolean healthy) throws NacosException;
     
     /**
-     * Get qualified instances within specified clusters of service.
+     * 获取特定服务特定集群的实例
      *
-     * @param serviceName name of service
-     * @param groupName   group of service
-     * @param clusters    list of cluster
-     * @param healthy     a flag to indicate returning healthy or unhealthy instances
+     * @param serviceName 服务名称
+     * @param groupName   服务所在分组
+     * @param clusters    集群名称列表
+     * @param healthy     服务状态是否健康
      * @return A qualified list of instance
      * @throws NacosException nacos exception
      */
@@ -632,14 +632,14 @@ public interface NamingService {
     List<ServiceInfo> getSubscribeServices() throws NacosException;
     
     /**
-     * get server health status.
+     * 返回Nacos状态
      *
      * @return is server healthy
      */
     String getServerStatus();
     
     /**
-     * Shutdown the resource service.
+     * 中止注册中心服务
      *
      * @throws NacosException exception.
      */

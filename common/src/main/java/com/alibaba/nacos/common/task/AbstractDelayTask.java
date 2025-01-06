@@ -25,12 +25,14 @@ package com.alibaba.nacos.common.task;
 public abstract class AbstractDelayTask implements NacosTask {
     
     /**
-     * Task time interval between twice processing, unit is millisecond.
+     * 任务两次执行的间隔，时间单位为毫秒。
      */
     private long taskInterval;
     
     /**
-     * The time which was processed at last time, unit is millisecond.
+     * 记录任务的创建时间，如果任务上次执行失败了，则更新该时间。时间单位为毫秒。
+     * 使用当前时间-该值得到的结果，便作为判断任务是否可以执行的依据
+     * @see #shouldProcess()
      */
     private long lastProcessTime;
     
@@ -61,7 +63,11 @@ public abstract class AbstractDelayTask implements NacosTask {
     public long getLastProcessTime() {
         return this.lastProcessTime;
     }
-    
+
+    /**
+     * 对于延迟任务来说，只有满足任务间隔时，才会去执行
+     * @return
+     */
     @Override
     public boolean shouldProcess() {
         return (System.currentTimeMillis() - this.lastProcessTime >= this.taskInterval);

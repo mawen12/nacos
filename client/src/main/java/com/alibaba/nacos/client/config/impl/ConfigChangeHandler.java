@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 配置变更处理程序，单例设计模式
+ * 单例设计模式。
+ * 配置变更处理程序，
  *
  * @author rushsky518
  */

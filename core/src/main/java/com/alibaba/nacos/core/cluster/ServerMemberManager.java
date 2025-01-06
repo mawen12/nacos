@@ -93,11 +93,13 @@ import static com.alibaba.nacos.api.exception.NacosException.CLIENT_INVALID_PARA
 @Component(value = "serverMemberManager")
 public class ServerMemberManager implements ApplicationListener<WebServerInitializedEvent> {
     
-    private final NacosAsyncRestTemplate asyncRestTemplate = HttpClientBeanHolder.getNacosAsyncRestTemplate(
-            Loggers.CORE);
-    
+    private final NacosAsyncRestTemplate asyncRestTemplate = HttpClientBeanHolder.getNacosAsyncRestTemplate(Loggers.CORE);
+
+    /**
+     * Nacos Server启动的默认端口
+     */
     private static final int DEFAULT_SERVER_PORT = 8848;
-    
+
     private static final String SERVER_PORT_PROPERTY = "server.port";
     
     private static final String SPRING_MANAGEMENT_CONTEXT_NAMESPACE = "management";
@@ -111,7 +113,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private static final long DEFAULT_TASK_DELAY_TIME = 5_000L;
     
     /**
-     * Cluster node list.
+     * 保存所有的集群节点
      */
     private volatile ConcurrentSkipListMap<String, Member> serverList;
     
@@ -121,12 +123,12 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private static volatile boolean isInIpList = true;
     
     /**
-     * port.
+     * 端口
      */
     private int port;
     
     /**
-     * Address information for the local node.
+     * 本地服务地址
      */
     private String localAddress;
     
@@ -136,7 +138,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private MemberLookup lookup;
     
     /**
-     * self member obj.
+     * 成员自己
      */
     private volatile Member self;
     
@@ -162,7 +164,13 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
+        /**
+         * 解析端口，从 ENV(server.port) -> DEFAULT(8848)
+         */
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
+        /**
+         * 本地地址，格式为ip:port
+         */
         this.localAddress = InetUtils.getSelfIP() + ":" + port;
         this.self = MemberUtil.singleParse(this.localAddress);
         this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);

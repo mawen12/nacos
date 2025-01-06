@@ -26,12 +26,15 @@ import java.util.Objects;
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * Naming listener invoker.
+ * 注册中心监听器调用器
  *
  * @author lideyou
  */
 public class NamingListenerInvoker implements ListenerInvoker<NamingEvent> {
-    
+
+    /**
+     * 事件监听器
+     */
     private final EventListener listener;
     
     public NamingListenerInvoker(EventListener listener) {
@@ -40,17 +43,25 @@ public class NamingListenerInvoker implements ListenerInvoker<NamingEvent> {
     
     @Override
     public void invoke(NamingEvent event) {
+        /**
+         * 日志记录事件的分组、服务名称、监听器
+         */
         logInvoke(event);
         if (listener instanceof AbstractEventListener && ((AbstractEventListener) listener).getExecutor() != null) {
+            /**
+             * 使用用户提供的执行器来处理事件调用
+             */
             ((AbstractEventListener) listener).getExecutor().execute(() -> listener.onEvent(event));
         } else {
+            /**
+             * 使用当前线程触发事件调用
+             */
             listener.onEvent(event);
         }
     }
     
     private void logInvoke(NamingEvent event) {
-        NAMING_LOGGER.info("Invoke event groupName: {}, serviceName: {} to Listener: {}", event.getGroupName(),
-                event.getServiceName(), listener.toString());
+        NAMING_LOGGER.info("Invoke event groupName: {}, serviceName: {} to Listener: {}", event.getGroupName(), event.getServiceName(), listener.toString());
     }
     
     @Override

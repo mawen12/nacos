@@ -31,22 +31,34 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Naming selector wrapper.
+ * 注册中心选择器包装器
  *
  * @author lideyou
  */
 public class NamingSelectorWrapper extends AbstractSelectorWrapper<NamingSelector, NamingEvent, InstancesChangeEvent> {
-    
+
+    /**
+     * 服务名称
+     */
     private String serviceName;
-    
+
+    /**
+     * 分组名称
+     */
     private String groupName;
-    
+
+    /**
+     * 集群
+     */
     private String clusters;
     
     private final InnerNamingContext namingContext = new InnerNamingContext();
     
     private class InnerNamingContext implements NamingContext {
-        
+
+        /**
+         * 实例列表
+         */
         private List<Instance> instances;
         
         @Override
@@ -104,18 +116,30 @@ public class NamingSelectorWrapper extends AbstractSelectorWrapper<NamingSelecto
     protected NamingEvent buildListenerEvent(InstancesChangeEvent event) {
         List<Instance> currentIns = Collections.emptyList();
         if (CollectionUtils.isNotEmpty(event.getHosts())) {
+            /**
+             * 过滤实例
+             */
             currentIns = doSelect(event.getHosts());
         }
         
         InstancesDiff diff = event.getInstancesDiff();
         InstancesDiff newDiff = new InstancesDiff();
         if (diff.isAdded()) {
+            /**
+             * 过滤新增的实例
+             */
             newDiff.setAddedInstances(doSelect(diff.getAddedInstances()));
         }
         if (diff.isRemoved()) {
+            /**
+             * 过滤移除的实例
+             */
             newDiff.setRemovedInstances(doSelect(diff.getRemovedInstances()));
         }
         if (diff.isModified()) {
+            /**
+             * 过滤编辑的实例
+             */
             newDiff.setModifiedInstances(doSelect(diff.getModifiedInstances()));
         }
         

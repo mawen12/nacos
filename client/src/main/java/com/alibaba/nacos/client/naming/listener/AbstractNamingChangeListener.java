@@ -20,7 +20,7 @@ import com.alibaba.nacos.api.naming.listener.AbstractEventListener;
 import com.alibaba.nacos.api.naming.listener.Event;
 
 /**
- * Listener for NamingChangeEvent.
+ * 用于{@link NamingChangeEvent}的监听器
  *
  * @author lideyou
  */
@@ -28,7 +28,13 @@ public abstract class AbstractNamingChangeListener extends AbstractEventListener
     
     @Override
     public final void onEvent(Event event) {
+        /**
+         * 仅处理{@link NamingChangeEvent}事件
+         */
         if (event instanceof NamingChangeEvent) {
+            /**
+             * 事件处理委托给{@link #onChange(NamingChangeEvent)}方法
+             */
             onChange((NamingChangeEvent) event);
         }
     }

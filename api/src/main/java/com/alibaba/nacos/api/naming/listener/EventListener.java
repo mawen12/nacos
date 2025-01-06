@@ -17,14 +17,14 @@
 package com.alibaba.nacos.api.naming.listener;
 
 /**
- * Event Listener.
+ * 事件监听器
  *
  * @author Nacos
  */
 public interface EventListener {
     
     /**
-     * callback event.
+     * 事件回调
      *
      * @param event event
      */

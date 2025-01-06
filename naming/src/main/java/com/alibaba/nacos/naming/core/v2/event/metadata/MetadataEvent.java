@@ -62,7 +62,10 @@ public class MetadataEvent extends Event {
             super(service, expired);
         }
     }
-    
+
+    /**
+     * 携带实例元数据的事件
+     */
     public static class InstanceMetadataEvent extends MetadataEvent {
         
         private static final long serialVersionUID = 5781016126117637520L;

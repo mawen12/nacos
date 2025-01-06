@@ -34,8 +34,7 @@ public enum AbilityKey {
     /**
      * Server support register or deregister persistent instance by grpc.
      */
-    SERVER_SUPPORT_PERSISTENT_INSTANCE_BY_GRPC("supportPersistentInstanceByGrpc",
-            "support persistent instance by grpc", AbilityMode.SERVER),
+    SERVER_SUPPORT_PERSISTENT_INSTANCE_BY_GRPC("supportPersistentInstanceByGrpc", "support persistent instance by grpc", AbilityMode.SERVER),
     
     /**
      * For Test temporarily.

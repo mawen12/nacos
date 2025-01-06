@@ -24,6 +24,7 @@ import java.util.Collection;
 
 /**
  * The manager of {@code Client} Nacos naming client.
+ * Nacos的客户端管理器
  *
  * @author xiweng.yy
  */
