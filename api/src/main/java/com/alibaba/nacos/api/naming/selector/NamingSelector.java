@@ -19,7 +19,9 @@ package com.alibaba.nacos.api.naming.selector;
 import com.alibaba.nacos.api.selector.client.Selector;
 
 /**
- * 注册中心选择器
+ * 客户端侧的注册中心选择器
+ * 该选择器仅在接收到{@link com.alibaba.nacos.client.naming.listener.NamingChangeEvent}事件时，对其中的实例进行过滤的。
+ * 实际的处理过程位于{@link com.alibaba.nacos.client.naming.selector.NamingSelectorWrapper#buildListenerEvent(com.alibaba.nacos.client.naming.event.InstancesChangeEvent)}
  *
  * @author lideyou
  */

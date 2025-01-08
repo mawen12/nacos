@@ -19,7 +19,7 @@ package com.alibaba.nacos.client.naming.backups;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 
 /**
- * Naming Failover Data.
+ * 基于注册中心的灾难恢复数据
  *
  * @author zongkang.guo
  */

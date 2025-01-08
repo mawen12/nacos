@@ -37,18 +37,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * Failover Data Disk Impl.
+ * 基于本地磁盘的灾难恢复实现，从本地磁盘指定目录读取故障恢复数据
  *
  * @author zongkang.guo
  */
 public class DiskFailoverDataSource implements FailoverDataSource {
-    
+
+    /**
+     * 灾难恢复文件名
+     */
     private static final String FAILOVER_DIR = "/failover";
-    
+
+    /**
+     * 开启灾难恢复模式标识
+     */
     private static final String IS_FAILOVER_MODE = "1";
-    
+
+    /**
+     * 关闭灾难恢复模式标识
+     */
     private static final String NO_FAILOVER_MODE = "0";
-    
+
     private static final String FAILOVER_MODE_PARAM = "failover-mode";
     
     private static final FailoverSwitch FAILOVER_SWITCH_FALSE = new FailoverSwitch(Boolean.FALSE);
@@ -58,16 +67,28 @@ public class DiskFailoverDataSource implements FailoverDataSource {
     private final Map<String, String> switchParams = new ConcurrentHashMap<>();
     
     private Map<String, FailoverData> serviceMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * 灾难恢复文件路径
+     */
     private String failoverDir;
     
     private long lastModifiedMillis = 0L;
     
     public DiskFailoverDataSource() {
+        /**
+         * 构造灾难恢复文件路径，默认路径为${user.home}/nacos/naming/public/failover
+         */
         failoverDir = CacheDirUtil.getCacheDir() + FAILOVER_DIR;
+        /**
+         * 默认为不开启灾难恢复
+         */
         switchParams.put(FAILOVER_MODE_PARAM, Boolean.FALSE.toString());
     }
-    
+
+    /**
+     * 灾难恢复文件读取器
+     */
     class FailoverFileReader implements Runnable {
         
         @Override
@@ -76,27 +97,43 @@ public class DiskFailoverDataSource implements FailoverDataSource {
             
             try {
                 File cacheDir = new File(failoverDir);
+                /**
+                 * 如果目录不存在，则创建目录
+                 */
                 DiskCache.createFileIfAbsent(cacheDir, true);
-                
+
+                /**
+                 * 获取该目录下所有的文件
+                 */
                 File[] files = cacheDir.listFiles();
                 if (files == null) {
                     return;
                 }
                 
                 for (File file : files) {
+                    /**
+                     * 仅从文件读取灾难恢复数据
+                     */
                     if (!file.isFile()) {
                         continue;
                     }
-                    
+
+                    /**
+                     * 如果是默认的，则跳过
+                     */
                     if (file.getName().equals(UtilAndComs.FAILOVER_SWITCH)) {
                         continue;
                     }
-                    
+
+                    /**
+                     * 解析灾难恢复文件，并写入到{@link #serviceMap}
+                     */
                     for (Map.Entry<String, ServiceInfo> entry : DiskCache.parseServiceInfoFromCache(file).entrySet()) {
                         domMap.put(entry.getKey(), NamingFailoverData.newNamingFailoverData(entry.getValue()));
                     }
                 }
             } catch (Exception e) {
+                // 读取出现异常，仅在日志中写入错误信息
                 NAMING_LOGGER.error("[NA] failed to read cache file", e);
             }
             

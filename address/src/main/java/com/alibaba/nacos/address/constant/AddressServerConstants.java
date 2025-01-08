@@ -40,6 +40,7 @@ public interface AddressServerConstants {
     
     /**
      * the separator for service name between raw service name and group.
+     * 原始服务名称和分组之间的服务名称分隔符，格式为group@@service
      */
     String GROUP_SERVICE_NAME_SEP = "@@";
     
@@ -66,7 +67,6 @@ public interface AddressServerConstants {
     /**
      * the url for address server prefix.
      */
-    String ADDRESS_SERVER_REQUEST_URL =
-            UtilsAndCommons.NACOS_SERVER_CONTEXT + UtilsAndCommons.NACOS_SERVER_VERSION + "/as";
+    String ADDRESS_SERVER_REQUEST_URL = UtilsAndCommons.NACOS_SERVER_CONTEXT + UtilsAndCommons.NACOS_SERVER_VERSION + "/as";
     
 }

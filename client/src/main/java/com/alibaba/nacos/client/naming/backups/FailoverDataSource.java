@@ -19,14 +19,14 @@ package com.alibaba.nacos.client.naming.backups;
 import java.util.Map;
 
 /**
- * Failover Service Interface.
+ * 故障转移服务接口
  *
  * @author Nacos
  */
 public interface FailoverDataSource {
     
     /**
-     * Get current disaster recovery switch.
+     * 获取当前灾难恢复交换机，可以设置或读取当前是否开启了灾难恢复
      *
      * @return
      */
@@ -34,7 +34,7 @@ public interface FailoverDataSource {
     
     
     /**
-     * Get current disaster recovery data.
+     * 获取当前灾难恢复数据
      *
      * @return map
      */

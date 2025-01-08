@@ -17,14 +17,14 @@
 package com.alibaba.nacos.client.naming.backups;
 
 /**
- * Failover switch.
+ * 灾难恢复交换机
  *
  * @author zongkang.guo
  */
 public class FailoverSwitch {
     
     /**
-     * Failover switch enable.
+     * 灾难恢复开关
      */
     private final boolean enabled;
     

@@ -24,7 +24,7 @@ import com.alibaba.nacos.api.selector.AbstractSelector;
 import java.util.Map;
 
 /**
- * Operations related to Nacos.
+ * 注册中心维护服务，提供服务查询、服务创建、服务删除、服务更新、实例更新
  *
  * @author liaochuntao
  * @since 1.0.1
@@ -32,7 +32,7 @@ import java.util.Map;
 public interface NamingMaintainService {
     
     /**
-     * update instance info.
+     * 更新服务信息
      *
      * @param serviceName service name
      * @param instance    instance

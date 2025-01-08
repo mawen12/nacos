@@ -109,7 +109,7 @@ public class DiskCache {
     }
     
     /**
-     * Parse Service info from cache file or failover file.
+     * 从缓存文件或灾难恢复文件中解析服务信息
      *
      * @param file cache file or failover file
      * @return Service info
@@ -118,9 +118,14 @@ public class DiskCache {
     @SuppressWarnings("PMD.UndefineMagicConstantRule")
     public static Map<String, ServiceInfo> parseServiceInfoFromCache(File file) throws UnsupportedEncodingException {
         Map<String, ServiceInfo> result = new HashMap<>(1);
+        /**
+         * 解析文件名
+         */
         String fileName = URLDecoder.decode(file.getName(), "UTF-8");
-        if (!(fileName.endsWith(Constants.SERVICE_INFO_SPLITER + "meta") || fileName
-                .endsWith(Constants.SERVICE_INFO_SPLITER + "special-url"))) {
+        /**
+         * 忽略以@@meta和@@special-url结尾的文件
+         */
+        if (!(fileName.endsWith(Constants.SERVICE_INFO_SPLITER + "meta") || fileName.endsWith(Constants.SERVICE_INFO_SPLITER + "special-url"))) {
             ServiceInfo dom = new ServiceInfo(fileName);
             List<Instance> ips = new ArrayList<>();
             dom.setHosts(ips);

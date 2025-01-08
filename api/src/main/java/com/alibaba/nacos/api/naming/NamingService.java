@@ -27,7 +27,7 @@ import com.alibaba.nacos.api.selector.AbstractSelector;
 import java.util.List;
 
 /**
- * 注册中心服务
+ * 注册中心服务，提供实例（批量）注册（批量）注销、服务订阅、服务取消订阅、服务名称查询、实例查询
  *
  * @author nkorange
  */

@@ -24,12 +24,15 @@ import java.io.File;
 import com.alibaba.nacos.client.env.NacosClientProperties;
 
 /**
- * Cache Dir Utils.
+ * 本地缓存路径，像是灾难恢复文件和注册中心服务都存放在此
  *
  * @author zongkang.guo
  */
 public class CacheDirUtil {
-    
+
+    /**
+     * 默认的缓存路径为${user.home}/nacos/naming/public
+     */
     private static String cacheDir;
     
     private static final String JM_SNAPSHOT_PATH_PROPERTY = "JM.SNAPSHOT.PATH";
@@ -48,22 +51,31 @@ public class CacheDirUtil {
      * @return
      */
     public static String initCacheDir(String namespace, NacosClientProperties properties) {
-        
+        /**
+         * 从 ENV(JM.SNAPSHOT.PATH) 解析快照文件路径
+         */
         String jmSnapshotPath = properties.getProperty(JM_SNAPSHOT_PATH_PROPERTY);
         
         String namingCacheRegistryDir = "";
+        /**
+         * 从 PROPERTIES(namingCacheRegistryDir) 解析缓存的注册目录
+         *
+         * TODO by mawen 替换为 containsKey
+         */
         if (properties.getProperty(PropertyKeyConst.NAMING_CACHE_REGISTRY_DIR) != null) {
-            namingCacheRegistryDir =
-                    File.separator + properties.getProperty(PropertyKeyConst.NAMING_CACHE_REGISTRY_DIR);
+            namingCacheRegistryDir = File.separator + properties.getProperty(PropertyKeyConst.NAMING_CACHE_REGISTRY_DIR);
         }
-        
+
         if (!StringUtils.isBlank(jmSnapshotPath)) {
-            cacheDir = jmSnapshotPath + File.separator + FILE_PATH_NACOS + namingCacheRegistryDir + File.separator
-                    + FILE_PATH_NAMING + File.separator + namespace;
+            /**
+             * 从 ENV(JM.SNAPSHOT.PATH) + DEFAULT(nacos) + PROPERTIES(namingCacheRegistryDir) + DEFAULT(naming) + PROPERTIES(namespace) 构造缓存目录
+             */
+            cacheDir = jmSnapshotPath + File.separator + FILE_PATH_NACOS + namingCacheRegistryDir + File.separator + FILE_PATH_NAMING + File.separator + namespace;
         } else {
-            cacheDir =
-                    properties.getProperty(USER_HOME_PROPERTY) + File.separator + FILE_PATH_NACOS + namingCacheRegistryDir
-                            + File.separator + FILE_PATH_NAMING + File.separator + namespace;
+            /**
+             * 从 ENV(user. home) + DEFAULT(nacos) + PROPERTIES(namingCacheRegistryDir) + DEFAULT(naming) + PROPERTIES(namespace) 构造缓存目录
+             */
+            cacheDir = properties.getProperty(USER_HOME_PROPERTY) + File.separator + FILE_PATH_NACOS + namingCacheRegistryDir + File.separator + FILE_PATH_NAMING + File.separator + namespace;
         }
         
         return cacheDir;

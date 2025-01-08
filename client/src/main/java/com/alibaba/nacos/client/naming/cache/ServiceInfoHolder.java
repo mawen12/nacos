@@ -39,47 +39,84 @@ import java.util.concurrent.ConcurrentMap;
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * Naming client service information holder.
+ * Nacos注册中心服务端信息持有者，持有的信息结构如下：
+ * <pre>
+ *     ServiceInfo {
+ *          name
+ *          groupName
+ *          clusters
+ *          lastRefTime
+ *          checksum
+ *          hosts {
+ *              instanceId
+ *              ip
+ *              port
+ *              weight
+ *              healthy
+ *              enabled
+ *              ephemeral
+ *              clusterName
+ *              serviceName
+ *              metadata
+ *          }
+ *     }
+ * </pre>
+ * <p>
+ * 负责从本地磁盘上加载服务信息，并支持将服务端推送的服务信息更新
  *
  * @author xiweng.yy
  */
 public class ServiceInfoHolder implements Closeable {
-    
+
+    /**
+     * Map<group@@service@@clusters, 服务信息>
+     */
     private final ConcurrentMap<String, ServiceInfo> serviceInfoMap;
-    
+
     private final FailoverReactor failoverReactor;
-    
+
     private final boolean pushEmptyProtection;
-    
+
     private final InstancesDiffer instancesDiffer;
-    
+
+    /**
+     * 本地文件缓存目录
+     */
     private String cacheDir;
-    
+
     private String notifierEventScope;
-    
+
     public ServiceInfoHolder(String namespace, String notifierEventScope, NacosClientProperties properties) {
+        /**
+         * 使用指定命名空间和属性构造服务缓存目录，默认路径为${user.home}/nacos/naming/public
+         */
         cacheDir = CacheDirUtil.initCacheDir(namespace, properties);
+        /**
+         * 构造实例变化
+         */
         instancesDiffer = new InstancesDiffer();
+        /**
+         * 如果设置了PROPERTIES(namingLoadCacheAtStart)=true，则从磁盘中加载服务信息
+         */
         if (isLoadCacheAtStart(properties)) {
             this.serviceInfoMap = new ConcurrentHashMap<>(DiskCache.read(this.cacheDir));
         } else {
             this.serviceInfoMap = new ConcurrentHashMap<>(16);
         }
+
         this.failoverReactor = new FailoverReactor(this, notifierEventScope);
         this.pushEmptyProtection = isPushEmptyProtect(properties);
         this.notifierEventScope = notifierEventScope;
     }
-    
+
     private boolean isLoadCacheAtStart(NacosClientProperties properties) {
         boolean loadCacheAtStart = false;
-        if (properties != null && StringUtils.isNotEmpty(
-                properties.getProperty(PropertyKeyConst.NAMING_LOAD_CACHE_AT_START))) {
-            loadCacheAtStart = ConvertUtils.toBoolean(
-                    properties.getProperty(PropertyKeyConst.NAMING_LOAD_CACHE_AT_START));
+        if (properties != null && StringUtils.isNotEmpty(properties.getProperty(PropertyKeyConst.NAMING_LOAD_CACHE_AT_START))) {
+            loadCacheAtStart = ConvertUtils.toBoolean(properties.getProperty(PropertyKeyConst.NAMING_LOAD_CACHE_AT_START));
         }
         return loadCacheAtStart;
     }
-    
+
     private boolean isPushEmptyProtect(NacosClientProperties properties) {
         boolean pushEmptyProtection = false;
         if (properties != null && StringUtils.isNotEmpty(
@@ -89,17 +126,17 @@ public class ServiceInfoHolder implements Closeable {
         }
         return pushEmptyProtection;
     }
-    
+
     public Map<String, ServiceInfo> getServiceInfoMap() {
         return serviceInfoMap;
     }
-    
+
     public ServiceInfo getServiceInfo(final String serviceName, final String groupName, final String clusters) {
         String groupedServiceName = NamingUtils.getGroupedName(serviceName, groupName);
         String key = ServiceInfo.getKey(groupedServiceName, clusters);
         return serviceInfoMap.get(key);
     }
-    
+
     /**
      * Process service json.
      *
@@ -111,7 +148,7 @@ public class ServiceInfoHolder implements Closeable {
         serviceInfo.setJsonFromServer(json);
         return processServiceInfo(serviceInfo);
     }
-    
+
     /**
      * Process service info.
      *
@@ -141,7 +178,7 @@ public class ServiceInfoHolder implements Closeable {
         if (diff.hasDifferent()) {
             NAMING_LOGGER.info("current ips:({}) service: {} -> {}", serviceInfo.ipCount(), serviceInfo.getKey(),
                     JacksonUtils.toJson(serviceInfo.getHosts()));
-            
+
             if (!failoverReactor.isFailoverSwitch(serviceKey)) {
                 NotifyCenter.publishEvent(
                         new InstancesChangeEvent(notifierEventScope, serviceInfo.getName(), serviceInfo.getGroupName(),
@@ -151,29 +188,29 @@ public class ServiceInfoHolder implements Closeable {
         }
         return serviceInfo;
     }
-    
+
     private boolean isEmptyOrErrorPush(ServiceInfo serviceInfo) {
         return null == serviceInfo.getHosts() || (pushEmptyProtection && !serviceInfo.validate());
     }
-    
+
     private InstancesDiff getServiceInfoDiff(ServiceInfo oldService, ServiceInfo newService) {
         return instancesDiffer.doDiff(oldService, newService);
     }
-    
+
     public String getCacheDir() {
         return cacheDir;
     }
-    
+
     public boolean isFailoverSwitch() {
         return failoverReactor.isFailoverSwitch();
     }
-    
+
     public ServiceInfo getFailoverServiceInfo(final String serviceName, final String groupName, final String clusters) {
         String groupedServiceName = NamingUtils.getGroupedName(serviceName, groupName);
         String key = ServiceInfo.getKey(groupedServiceName, clusters);
         return failoverReactor.getService(key);
     }
-    
+
     @Override
     public void shutdown() throws NacosException {
         String className = this.getClass().getName();

@@ -17,19 +17,19 @@
 package com.alibaba.nacos.client.naming.backups;
 
 /**
- * Failover Data.
+ * 客户端的灾难恢复数据，虽然预制了两张类型，但是目前仅支持注册中心
  *
  * @author zongkang.guo
  */
 public class FailoverData {
     
     /**
-     * failover type,naming or config.
+     * 灾难恢复类型，注册中心还是配置中心
      */
     private final DataType dataType;
     
     /**
-     * failover data.
+     * 灾难恢复数据，对于{@link DataType#naming}来说，就是{@link com.alibaba.nacos.api.naming.pojo.ServiceInfo}
      */
     private final Object data;
     
@@ -40,11 +40,11 @@ public class FailoverData {
     
     public enum DataType {
         /**
-         * naming.
+         * 注册中心
          */
         naming,
         /**
-         * config.
+         * 配置中心
          */
         config
     }

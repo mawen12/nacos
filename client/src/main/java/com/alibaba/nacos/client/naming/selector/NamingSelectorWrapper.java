@@ -117,7 +117,7 @@ public class NamingSelectorWrapper extends AbstractSelectorWrapper<NamingSelecto
         List<Instance> currentIns = Collections.emptyList();
         if (CollectionUtils.isNotEmpty(event.getHosts())) {
             /**
-             * 过滤实例
+             * 使用指定过滤器对所有实例进行过滤
              */
             currentIns = doSelect(event.getHosts());
         }
@@ -126,19 +126,19 @@ public class NamingSelectorWrapper extends AbstractSelectorWrapper<NamingSelecto
         InstancesDiff newDiff = new InstancesDiff();
         if (diff.isAdded()) {
             /**
-             * 过滤新增的实例
+             * 使用指定过滤器对新增的实例进行过滤
              */
             newDiff.setAddedInstances(doSelect(diff.getAddedInstances()));
         }
         if (diff.isRemoved()) {
             /**
-             * 过滤移除的实例
+             * 使用指定过滤器对移除的实例进行过滤
              */
             newDiff.setRemovedInstances(doSelect(diff.getRemovedInstances()));
         }
         if (diff.isModified()) {
             /**
-             * 过滤编辑的实例
+             * 使用指定过滤器对编辑的实例进行过滤
              */
             newDiff.setModifiedInstances(doSelect(diff.getModifiedInstances()));
         }

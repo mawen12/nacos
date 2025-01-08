@@ -45,18 +45,27 @@ import static com.alibaba.nacos.client.constant.Constants.Security.SECURITY_INFO
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * Nacos naming maintain service.
+ * Nacos注册中心维护服务
  *
  * @author liaochuntao
  * @since 1.0.1
  */
 @SuppressWarnings("PMD.ServiceOrDaoClassShouldEndWithImplRule")
 public class NacosNamingMaintainService implements NamingMaintainService {
-    
+
+    /**
+     * 命名空间，即租户
+     */
     private String namespace;
-    
+
+    /**
+     * 与Nacos Server进行http通信的客户端代理
+     */
     private NamingHttpClientProxy serverProxy;
-    
+
+    /**
+     *
+     */
     private ServerListManager serverListManager;
     
     private SecurityProxy securityProxy;
@@ -72,9 +81,21 @@ public class NacosNamingMaintainService implements NamingMaintainService {
     public NacosNamingMaintainService(Properties properties) throws NacosException {
         init(properties);
     }
-    
+
+    /**
+     * 使用属性提供的信息来初始化当前服务
+     *
+     * @param properties
+     * @throws NacosException
+     */
     private void init(Properties properties) throws NacosException {
+        /**
+         * 基于原型模式的设计，从 Properties -> NacosClientProperties
+         */
         final NacosClientProperties nacosClientProperties = NacosClientProperties.PROTOTYPE.derive(properties);
+        /**
+         *
+         */
         ValidatorUtils.checkInitParam(nacosClientProperties);
         namespace = InitUtils.initNamespaceForNaming(nacosClientProperties);
         InitUtils.initSerialization();

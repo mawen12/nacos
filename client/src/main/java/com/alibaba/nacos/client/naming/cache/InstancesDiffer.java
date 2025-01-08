@@ -32,14 +32,14 @@ import java.util.Set;
 import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
- * The instance list differ for nacos naming.
+ * 服务信息差异对比工具
  *
  * @author xiweng.yy
  */
 public final class InstancesDiffer {
     
     /**
-     * Do instance different for input service info.
+     * 返回旧服务信息和新服务信息的差异对比结果
      *
      * @param oldService old service info
      * @param newService new service info
@@ -48,17 +48,26 @@ public final class InstancesDiffer {
     public InstancesDiff doDiff(ServiceInfo oldService, ServiceInfo newService) {
         InstancesDiff instancesDiff = new InstancesDiff();
         if (null == oldService) {
-            NAMING_LOGGER.info("init new ips({}) service: {} -> {}", newService.ipCount(), newService.getKey(),
-                    JacksonUtils.toJson(newService.getHosts()));
+            /**
+             * 旧服务为空，则代表服务是新增的
+             */
+            NAMING_LOGGER.info("init new ips({}) service: {} -> {}", newService.ipCount(), newService.getKey(), JacksonUtils.toJson(newService.getHosts()));
             instancesDiff.setAddedInstances(newService.getHosts());
             return instancesDiff;
         }
         if (oldService.getLastRefTime() > newService.getLastRefTime()) {
-            NAMING_LOGGER.warn("out of date data received, old-t: {}, new-t: {}", oldService.getLastRefTime(),
-                    newService.getLastRefTime());
+            /**
+             * 旧服务比新服务的更新时间还要新，就代表数据存在问题，直接返回
+             */
+            NAMING_LOGGER.warn("out of date data received, old-t: {}, new-t: {}", oldService.getLastRefTime(), newService.getLastRefTime());
             return instancesDiff;
         }
-        
+
+        /**
+         * 转换为Map进行比对
+         *
+         * TODO by mawen 也许应该设置1.0f
+         */
         Map<String, Instance> oldHostMap = new HashMap<>(oldService.getHosts().size());
         for (Instance host : oldService.getHosts()) {
             oldHostMap.put(host.toInetAddr(), host);
@@ -98,20 +107,17 @@ public final class InstancesDiffer {
         }
         
         if (newHosts.size() > 0) {
-            NAMING_LOGGER.info("new ips({}) service: {} -> {}", newHosts.size(), newService.getKey(),
-                    JacksonUtils.toJson(newHosts));
+            NAMING_LOGGER.info("new ips({}) service: {} -> {}", newHosts.size(), newService.getKey(), JacksonUtils.toJson(newHosts));
             instancesDiff.setAddedInstances(newHosts);
         }
         
         if (remvHosts.size() > 0) {
-            NAMING_LOGGER.info("removed ips({}) service: {} -> {}", remvHosts.size(), newService.getKey(),
-                    JacksonUtils.toJson(remvHosts));
+            NAMING_LOGGER.info("removed ips({}) service: {} -> {}", remvHosts.size(), newService.getKey(), JacksonUtils.toJson(remvHosts));
             instancesDiff.setRemovedInstances(remvHosts);
         }
         
         if (modHosts.size() > 0) {
-            NAMING_LOGGER.info("modified ips({}) service: {} -> {}", modHosts.size(), newService.getKey(),
-                    JacksonUtils.toJson(modHosts));
+            NAMING_LOGGER.info("modified ips({}) service: {} -> {}", modHosts.size(), newService.getKey(), JacksonUtils.toJson(modHosts));
             instancesDiff.setModifiedInstances(modHosts);
         }
         return instancesDiff;

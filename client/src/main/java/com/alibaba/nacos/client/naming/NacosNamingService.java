@@ -71,17 +71,25 @@ public class NacosNamingService implements NamingService {
     private static final String DOWN = "DOWN";
     
     /**
-     * Each Naming service should have different namespace.
+     * 命名空间，即租户
      */
     private String namespace;
-    
+
+    /**
+     * 日志文件名称，已废弃
+     *
+     * @deprecated
+     */
     @Deprecated
     private String logName;
-    
+
     private ServiceInfoHolder serviceInfoHolder;
     
     private InstancesChangeNotifier changeNotifier;
-    
+
+    /**
+     * 与Nacos Server进行rpc通信的客户端代理
+     */
     private NamingClientProxy clientProxy;
     
     private String notifierEventScope;
@@ -102,7 +110,7 @@ public class NacosNamingService implements NamingService {
          */
         PreInitUtils.asyncPreLoadCostComponent();
         /**
-         * 构造属性值
+         * 构造属性值，从 Properties -> NacosClientProperties
          */
         final NacosClientProperties nacosClientProperties = NacosClientProperties.PROTOTYPE.derive(properties);
         /**
@@ -266,6 +274,9 @@ public class NacosNamingService implements NamingService {
     
     @Override
     public List<Instance> getAllInstances(String serviceName, String groupName) throws NacosException {
+        /**
+         *
+         */
         return getAllInstances(serviceName, groupName, new ArrayList<>());
     }
     
@@ -301,6 +312,9 @@ public class NacosNamingService implements NamingService {
     public List<Instance> getAllInstances(String serviceName, String groupName, List<String> clusters,
             boolean subscribe) throws NacosException {
         List<Instance> list;
+        /**
+         * 获取特定服务名称、特定分组名称、特定集群、特定订阅的服务及实例信息
+         */
         ServiceInfo serviceInfo = getServiceInfo(serviceName, groupName, clusters, subscribe);
         if (serviceInfo == null || CollectionUtils.isEmpty(list = serviceInfo.getHosts())) {
             return new ArrayList<>();
@@ -393,7 +407,13 @@ public class NacosNamingService implements NamingService {
     private ServiceInfo getServiceInfo(String serviceName, String groupName, List<String> clusters, boolean subscribe)
             throws NacosException {
         ServiceInfo serviceInfo;
+        /**
+         * 解析集群名称，将传递过来的集群名称转换为逗号分隔的字符串
+         */
         String clusterString = StringUtils.join(clusters, ",");
+        /**
+         *
+         */
         if (serviceInfoHolder.isFailoverSwitch()) {
             serviceInfo = getServiceInfoByFailover(serviceName, groupName, clusterString);
             if (serviceInfo != null && serviceInfo.getHosts().size() > 0) {

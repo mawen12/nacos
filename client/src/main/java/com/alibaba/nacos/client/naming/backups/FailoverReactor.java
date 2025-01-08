@@ -46,21 +46,37 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * Failover reactor.
+ * 故障转移反应器
  *
  * @author nkorange
  */
 public class FailoverReactor implements Closeable {
-    
+
+    /**
+     * Map<group@@serviceName@@clusters, 服务信息>
+     */
     private Map<String, ServiceInfo> serviceMap = new ConcurrentHashMap<>();
-    
+
+    /**
+     * 是否开启故障转移切换
+     */
     private boolean failoverSwitchEnable;
-    
+
+    /**
+     * 服务信息持有者，保存了服务及其实例信息
+     */
     private final ServiceInfoHolder serviceInfoHolder;
-    
+
     private final ScheduledExecutorService executorService;
-    
+
+    /**
+     * 用于对服务信息进行比对，并生成{@link InstancesDiff}
+     */
     private final InstancesDiffer instancesDiffer;
-    
+
+    /**
+     * 故障转移数据源
+     */
     private FailoverDataSource failoverDataSource;
     
     private String notifierEventScope;
