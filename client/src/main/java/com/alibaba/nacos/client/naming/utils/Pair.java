@@ -17,14 +17,20 @@
 package com.alibaba.nacos.client.naming.utils;
 
 /**
- * Pair.
+ * 键值对，存放实例和其权重
  *
  * @author nkorange
  */
 public class Pair<T> {
-    
+
+    /**
+     * 元素，实际场景中为{@link com.alibaba.nacos.api.naming.pojo.Instance}
+     */
     private final T item;
-    
+
+    /**
+     * 实例的权重，实际场景中为{@link com.alibaba.nacos.api.naming.pojo.Instance#weight}
+     */
     private final double weight;
     
     public Pair(T item, double weight) {

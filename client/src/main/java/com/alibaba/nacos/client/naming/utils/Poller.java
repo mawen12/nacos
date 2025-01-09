@@ -19,21 +19,21 @@ package com.alibaba.nacos.client.naming.utils;
 import java.util.List;
 
 /**
- * Poller.
+ * 轮询器
  *
  * @author nkorange
  */
 public interface Poller<T> {
     
     /**
-     * Get next element selected by poller.
+     * 返回被轮询器选中的下一个元素
      *
      * @return next element
      */
     T next();
     
     /**
-     * Update items stored in poller.
+     * 更新轮询器中的元素
      *
      * @param items new item list
      * @return new poller instance

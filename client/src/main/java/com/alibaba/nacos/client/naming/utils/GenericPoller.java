@@ -21,14 +21,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Generic Poller.
+ * 通用轮询器，基于自增的选择器
  *
  * @author nkorange
  */
 public class GenericPoller<T> implements Poller<T> {
     
     private final AtomicInteger index = new AtomicInteger(0);
-    
+
+    /**
+     * 元素列表，轮询其会从[0, items.size)依次取出元素
+     * 需要注意的时，因为底层使用基于索引来访问元素，因此外层传递过来的集合必须是ArrayList
+     */
     private List<T> items = new ArrayList<>();
     
     public GenericPoller(List<T> items) {
@@ -37,11 +41,17 @@ public class GenericPoller<T> implements Poller<T> {
     
     @Override
     public T next() {
+        /**
+         * 返回链表中下一个元素
+         */
         return items.get(Math.abs(index.getAndIncrement() % items.size()));
     }
     
     @Override
     public Poller<T> refresh(List<T> items) {
+        /**
+         * 构造并返回一个新的轮询器
+         */
         return new GenericPoller<>(items);
     }
 }

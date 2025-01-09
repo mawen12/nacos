@@ -36,14 +36,23 @@ import java.util.List;
 public class ServiceInfo {
     
     /**
-     * file name pattern: groupName@@name@clusters.
+     * 文件格式为 groupName@@name@@clusters，取第0位
      */
     private static final int GROUP_POSITION = 0;
-    
+
+    /**
+     * 文件格式为 groupName@@name@@clusters，取第1位
+     */
     private static final int SERVICE_POSITION = 1;
-    
+
+    /**
+     * 文件格式为 groupName@@name@@clusters，取第2位
+     */
     private static final int CLUSTER_POSITION = 2;
-    
+
+    /**
+     * 完整的文件名由三部分组成，groupName@@name@@clusters
+     */
     private static final int FILE_NAME_PARTS = 3;
     
     @JsonIgnore
@@ -64,17 +73,20 @@ public class ServiceInfo {
     private String groupName;
 
     /**
-     * 集群名称
+     * 集群名称，如果是多个集群[a,b,c]，格式为a,b,c
      */
     private String clusters;
 
+    /**
+     * 缓存过期时间
+     */
     private long cacheMillis = 1000L;
 
     /**
      * 服务下的实例列表
      */
     private List<Instance> hosts = new ArrayList<>();
-    
+
     private long lastRefTime = 0L;
     
     private String checksum = "";
@@ -95,19 +107,32 @@ public class ServiceInfo {
     }
     
     /**
-     * There is only one form of the key:groupName@@name@clusters. This constructor used by DiskCache.read(String) and
-     * FailoverReactor.FailoverFileReader,you should know that 'groupName' must not be null,and 'clusters' can be null.
+     * key的格式为groupName@@name@@clusters，其中clusters可以为空，其余不能为空
+     * 数据来源于{@link com.alibaba.nacos.client.naming.cache.DiskCache#read(string)} 和 {@link com.alibaba.nacos.client.naming.backups.datasource.DiskFailoverDataSource.FailoverFileReader#run()}
      */
     public ServiceInfo(final String key) {
+        /**
+         * 将groupName@@name@@clusters进行拆分，拆分字符为@@，拆分结果为[groupName,name,clusters]
+         */
         String[] keys = key.split(Constants.SERVICE_INFO_SPLITER);
+
         if (keys.length >= FILE_NAME_PARTS) {
+            /**
+             * 拆分结果大小>=3，则代表groupName, name, clusters均存在
+             */
             this.groupName = keys[GROUP_POSITION];
             this.name = keys[SERVICE_POSITION];
             this.clusters = keys[CLUSTER_POSITION];
         } else if (keys.length == CLUSTER_POSITION) {
+            /**
+             * 拆分结果大小=2，则代表groupName, name存在，clusters为空
+             */
             this.groupName = keys[GROUP_POSITION];
             this.name = keys[SERVICE_POSITION];
         } else {
+            /**
+             * 非法格式
+             */
             //defensive programming
             throw new IllegalArgumentException("Can't parse out 'groupName',but it must not be null!");
         }

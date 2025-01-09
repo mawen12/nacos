@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Chooser.
+ * 实例选择器
  *
  * @author alibaba
  */
 public class Chooser<K, T> {
-    
+
     private final K uniqueKey;
-    
+
     private volatile Ref<T> ref;
     
     public Chooser(K uniqueKey) {
@@ -60,33 +60,51 @@ public class Chooser<K, T> {
     }
     
     /**
-     * Random get one item with weight.
+     * 根据权重随机返回
      *
      * @return item
      */
     public T randomWithWeight() {
         Ref<T> ref = this.ref;
+        /**
+         * 获取[0, 1)之间的随机数
+         */
         double random = ThreadLocalRandom.current().nextDouble(0, 1);
+        /**
+         * 从权重中二分查找
+         */
         int index = Arrays.binarySearch(ref.weights, random);
         if (index < 0) {
+            /**
+             * 如果没有找到，index返回-1，则将index职位0
+             */
             index = -index - 1;
         } else {
+            /**
+             * 如果找到了，则取对应index的元素
+             */
             return ref.items.get(index);
         }
-        
+
+        /**
+         * 如果index在指定范围内，且随机数也小于index对应的权重，则取该元素
+         */
         if (index < ref.weights.length) {
             if (random < ref.weights[index]) {
                 return ref.items.get(index);
             }
         }
-        
+
+        /**
+         * 如果没有任何可选权重，代表要么是没有任何实例，要么是所有实例的权重都低于0，或均不是健康的
+         */
         if (ref.weights.length == 0) {
             throw new IllegalStateException("Cumulative Weight wrong , the array length is equal to 0.");
         }
-        
-        /* This should never happen, but it ensures we will return a correct
-         * object in case there is some floating point inequality problem
-         * wrt the cumulative probabilities. */
+
+        /**
+         * 兜底方案，选择最后一个元素
+         */
         return ref.items.get(ref.items.size() - 1);
     }
     
@@ -99,25 +117,45 @@ public class Chooser<K, T> {
     }
     
     /**
-     * refresh items.
+     * 刷新元素
      *
      * @param itemsWithWeight items with weight
      */
     public void refresh(List<Pair<T>> itemsWithWeight) {
+        /**
+         * 构造新的Ref
+         */
         Ref<T> newRef = new Ref<>(itemsWithWeight);
+        /**
+         * 在内部重新计算权重
+         */
         newRef.refresh();
+        /**
+         * 刷新通用轮询器
+         */
         newRef.poller = this.ref.poller.refresh(newRef.items);
         this.ref = newRef;
     }
     
     public class Ref<T> {
-        
+        /**
+         * List<Pair<实例, 实例的权重>>
+         */
         private List<Pair<T>> itemsWithWeight = new ArrayList<>();
-        
+
+        /**
+         * List<实例>
+         */
         private final List<T> items = new ArrayList<>();
-        
+
+        /**
+         * 轮询器
+         */
         private Poller<T> poller = new GenericPoller<>(items);
-        
+
+        /**
+         * 权重数组
+         */
         private double[] weights;
         
         public Ref(List<Pair<T>> itemsWithWeight) {
@@ -132,26 +170,44 @@ public class Chooser<K, T> {
         public void refresh() {
             double originWeightSum = 0;
             int size = 0;
+            /**
+             * 遍历元素
+             */
             for (Pair<T> item : itemsWithWeight) {
                 
                 double weight = item.weight();
                 //ignore item which weight is zero.see test_randomWithWeight_weight0 in ChooserTest
+                /**
+                 * 忽略权重<=0的实例
+                 */
                 if (weight <= 0) {
                     continue;
                 }
                 
                 items.add(item.item());
+                /**
+                 * 权重最大值为1000
+                 */
                 if (Double.isInfinite(weight)) {
                     weight = 10000.0D;
                 }
+                /**
+                 * 对于非数字的权重，修改为默认值1
+                 */
                 if (Double.isNaN(weight)) {
                     weight = 1.0D;
                 }
+                /**
+                 * 将权重累加
+                 */
                 originWeightSum += weight;
                 size++;
             }
             
             weights = new double[size];
+            /**
+             * 精确权重
+             */
             double exactWeight;
             double randomRange = 0D;
             int index = 0;
@@ -161,8 +217,14 @@ public class Chooser<K, T> {
                 if (singleWeight <= 0) {
                     continue;
                 }
-                
+
+                /**
+                 * 使用单个权重/总权重，获取单个权重的占比
+                 */
                 exactWeight = singleWeight / originWeightSum;
+                /**
+                 * 将占比值+前一个值增加，放置到
+                 */
                 weights[index] = randomRange + exactWeight;
                 randomRange = weights[index++];
             }
