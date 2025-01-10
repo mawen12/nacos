@@ -67,7 +67,7 @@ public class ConfigChangeHandler {
      * @param oldContent old data
      * @param newContent new data
      * @param type       data type
-     * @return change data map
+     * @return Map<ADDED/MODIFIED/DELETED, 配置变更元素>
      * @throws IOException io exception
      */
     public Map<String, ConfigChangeItem> parseChangeData(String oldContent, String newContent, String type) throws IOException {
