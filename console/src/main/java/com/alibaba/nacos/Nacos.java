@@ -28,6 +28,9 @@ import org.springframework.context.annotation.FilterType;
 
 /**
  * Nacos Server 启动器.
+ *
+ * <p>启动该类后，便可以访问{@code localhost:8848/nacos}，使用Nacos服务
+ *
  * <p>
  * Use @SpringBootApplication and @ComponentScan at the same time, using CUSTOM type filter to control module enabled.
  * </p>
@@ -41,7 +44,17 @@ import org.springframework.context.annotation.FilterType;
         @Filter(type = FilterType.CUSTOM, classes = {AutoConfigurationExcludeFilter.class})})
 @ServletComponentScan
 public class Nacos {
-    
+
+    /**
+     * 启动参数:
+     * <p>Override configuration properties
+     * <ul>
+     *     <li>nacos.standalone=true 以单机模式启动Nacos</li>
+     *     <li>nacos.functionMode=naming 仅使用注册中心</li>
+     * </ul>
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         SpringApplication.run(Nacos.class, args);
     }

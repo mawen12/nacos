@@ -21,14 +21,24 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Nacos naming starter.
+ * Nacos 注册中心启动器
  *
  * @author xxc
  */
 @EnableScheduling
 @SpringBootApplication(scanBasePackages = {"com.alibaba.nacos.naming", "com.alibaba.nacos.core"})
 public class NamingApp {
-    
+
+    /**
+     * 启动配置
+     *
+     * <p>Environment_Variables
+     * <ul>
+     *     <li>-m standalone</li>
+     * </ul>
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         SpringApplication.run(NamingApp.class, args);
     }

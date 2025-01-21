@@ -21,14 +21,16 @@ package com.alibaba.nacos.api.selector.client;
  *
  * @param <C> the type of selector context
  * @param <E> the type of select result
+ *
  * @author lideyou
  */
 public interface Selector<C, E> {
-    
+
     /**
      * 选择目标结果
      *
      * @param context selector context
+     *
      * @return select result
      */
     E select(C context);

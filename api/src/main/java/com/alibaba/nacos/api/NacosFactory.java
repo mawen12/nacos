@@ -35,67 +35,79 @@ import java.util.Properties;
  * @author Nacos
  */
 public class NacosFactory {
-    
+
     /**
      * 创建配置服务
      *
      * @param properties init param
+     *
      * @return config
+     *
      * @throws NacosException Exception
      */
     public static ConfigService createConfigService(Properties properties) throws NacosException {
         return ConfigFactory.createConfigService(properties);
     }
-    
+
     /**
      * 创建配置服务
      *
      * @param serverAddr server list
+     *
      * @return config
+     *
      * @throws NacosException Exception
      */
     public static ConfigService createConfigService(String serverAddr) throws NacosException {
         return ConfigFactory.createConfigService(serverAddr);
     }
-    
+
     /**
      * 创建命名服务
      *
      * @param serverAddr server list
+     *
      * @return Naming
+     *
      * @throws NacosException Exception
      */
     public static NamingService createNamingService(String serverAddr) throws NacosException {
         return NamingFactory.createNamingService(serverAddr);
     }
-    
+
     /**
      * 创建命名服务
      *
      * @param properties init param
+     *
      * @return Naming
+     *
      * @throws NacosException Exception
      */
     public static NamingService createNamingService(Properties properties) throws NacosException {
         return NamingFactory.createNamingService(properties);
     }
-    
+
     /**
      * Create maintain service.
      *
      * @param serverAddr server address
+     *
      * @return NamingMaintainService
+     *
      * @throws NacosException Exception
      */
     public static NamingMaintainService createMaintainService(String serverAddr) throws NacosException {
         return NamingMaintainFactory.createMaintainService(serverAddr);
     }
-    
+
     /**
      * Create maintain service.
      *
      * @param properties server address
+     *
      * @return NamingMaintainService
+     *
      * @throws NacosException Exception
      */
     public static NamingMaintainService createMaintainService(Properties properties) throws NacosException {

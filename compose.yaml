@@ -1,0 +1,11 @@
+services:
+  mysql:
+    container_name: nacos_mysql_db
+    image: mysql:latest
+    environment:
+      - 'MYSQL_ROOT_PASSWORD=admin'
+      - 'MYSQL_DATABASE=nacos'
+      - 'MYSQL_USER=nacos'
+      - 'MYSQL_PASSWORD=nacos'
+    ports:
+      - '3306:3306'
